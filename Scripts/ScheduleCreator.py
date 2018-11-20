@@ -14,6 +14,7 @@ Email: Henricus@Basien.de
 # External
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+import os
 import openpyxl
 from datetime import datetime
 # from collections import OrderedDict
@@ -31,13 +32,16 @@ from AircraftTypes import All_AircraftTypes
 
 class ScheduleCreator(object):
 	"""docstring for ScheduleCreator"""
-	def __init__(self, Airport,MaxNrAircraft=None,MaxNrOverlappingAircraft=30,AircraftTypes=All_AircraftTypes,AutoRun=True):
+	def __init__(self, Airport,MaxNrAircraft=None,MaxNrOverlappingAircraft=30,AircraftTypes=All_AircraftTypes,ScheduleFolder="Temp",AutoRun=True):
 		super(ScheduleCreator, self).__init__()
 
 		self.Airport                  = Airport
 		self.MaxNrAircraft            = MaxNrAircraft
 		self.MaxNrOverlappingAircraft = MaxNrOverlappingAircraft
 		self.AircraftTypes            = AircraftTypes
+
+		self.ScheduleFolder = os.path.realpath(ScheduleFolder)
+		if not os.path.exists(self.ScheduleFolder): os.makedirs(self.ScheduleFolder)
 
 		if self.MaxNrAircraft is None:
 			self.MaxNrAircraft = int((self.Airport.GetOperationalTime()/3600.)*self.MaxNrOverlappingAircraft)
@@ -93,7 +97,7 @@ class ScheduleCreator(object):
 			ws.cell(row=i+2, column=3).value = aircraft.Arrival
 			ws.cell(row=i+2, column=4).value = aircraft.Departure
 
-		wb.save("Airport '"+str(self.Airport.Name)+"' - Schedule.xlsx")
+		wb.save(os.path.join(self.ScheduleFolder,"Airport '"+str(self.Airport.Name)+"' - Schedule.xlsx"))
 
 #****************************************************************************************************
 # Test Code

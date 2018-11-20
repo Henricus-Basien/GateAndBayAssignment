@@ -10,6 +10,10 @@ Email: Henricus@Basien.de
 # Imports
 #****************************************************************************************************
 
+import os,sys
+RootPath = os.path.split(__file__)[0]
+sys.path.insert(0,os.path.join(RootPath,"Scripts"))
+
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # External
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -28,7 +32,7 @@ class GateAndBayAssignmentSolver(object):
 	"""docstring for GateAndBayAssignmentSolver"""
 	def __init__(self, Airport,Schedule=None):
 		super(GateAndBayAssignmentSolver, self).__init__()
-		self.Airport = Airport
+		self.Airport  = Airport
 		self.Schedule = Schedule
 		if self.Schedule is None:
 			MaxNrAircraft  = len(self.Airport.Bays)
