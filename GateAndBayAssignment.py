@@ -2,7 +2,7 @@
 '''
 Created on Tuesday 20.11.2018
 Copyright (©) Henricus N. Basien
-Author: Henricus N. Basien
+Author: Henricus N. Basien, Pavel Volkov
 Email: Henricus@Basien.de
 '''
 
