@@ -32,3 +32,8 @@ Thumbs.db
 *_LOCAL_*
 *_REMOTE_*
 *.orig
+
+######################
+#     Pulp Files     #
+######################
+*.mps
