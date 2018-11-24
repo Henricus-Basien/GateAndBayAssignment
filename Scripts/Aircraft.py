@@ -15,6 +15,7 @@ Email: Henricus@Basien.de
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 from datetime import datetime
+from copy import copy
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Internal
@@ -33,9 +34,12 @@ class Aircraft(object):
 	# Initialization
 	#================================================================================
 	
-	def __init__(self, ID=0,Arrival="00:00",Departure="23:59",Type="TestAircraft",NrPassengers=0,PrefferedGates=None,NeedsFueling=False):
+	MaxNrPassengers = 100
+	WB              = False
+
+	def __init__(self, ID="FN0",Arrival="00:00",Departure="23:59",Type="TestAircraft",NrPassengers=None,PrefferedGates=None,NeedsFueling=False):
 		super(Aircraft, self).__init__()
-		self.ID             = ID             # [str]
+		self.ID             = str(ID)        # [str]
 		self.Type           = Type           # [str]
 		self.Arrival        = Arrival        # [datetime]
 		self.Departure      = Departure      # [datetime]
@@ -54,6 +58,10 @@ class Aircraft(object):
 		self.Departure_t    = (self.Departure-self.Arrival_date).total_seconds()
 
 		self.GroundTime = self.Departure_t-self.Arrival_t
+
+		#--- Defaults ---
+		if self.NrPassengers is None:
+			self.NrPassengers = copy(self.MaxNrPassengers)
 		
 	#================================================================================
 	# Evaluate

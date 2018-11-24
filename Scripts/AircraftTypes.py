@@ -29,15 +29,29 @@ from Aircraft import Aircraft
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 class A320(Aircraft):
-	def __init__(self,NrPassengers=240, *args,**kwargs):
-		super(A320, self).__init__(Type="A320",NrPassengers=NrPassengers,*args,**kwargs)
+	MaxNrPassengers = 240
+	WB = False
+	def __init__(self, *args,**kwargs):
+		super(A320, self).__init__(Type="A320",*args,**kwargs)
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# B747
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+class B747(Aircraft):
+	MaxNrPassengers = 660
+	WB = False
+	def __init__(self, *args,**kwargs):
+		super(B747, self).__init__(Type="B747",*args,**kwargs)
+
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # All Aircraft
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 All_AircraftTypes = [
-A320
+A320,
+B747
 ]
 
 #****************************************************************************************************

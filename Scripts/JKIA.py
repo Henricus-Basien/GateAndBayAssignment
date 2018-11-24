@@ -43,14 +43,16 @@ class JKIA(Airport):
 	def SetupGates(self):
 
 		Gates = []
-		Gates.append(Gate(Name="A1"))
+		for i in range(30):
+			Gates.append(Gate(Name="X"+str(i+1)))
 
 		return Gates
 
 	def SetupBays(self):
 
 		Bays = []
-		Bays.append(Bay(Name="A1"))
+		for i in range(30):
+			Bays.append(Bay(Name="X"+str(i+1)))
 
 		return Bays
 

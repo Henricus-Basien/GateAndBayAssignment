@@ -30,14 +30,58 @@ from ScheduleCreator import ScheduleCreator
 
 class GateAndBayAssignmentSolver(object):
 	"""docstring for GateAndBayAssignmentSolver"""
-	def __init__(self, Airport,Schedule=None):
+
+	#================================================================================
+	# Initialization
+	#================================================================================
+	
+	def __init__(self, Airport,Schedule=None,LP_Path="Temp",AutoRun=True):
 		super(GateAndBayAssignmentSolver, self).__init__()
+		#--- Set Settings ---
 		self.Airport  = Airport
 		self.Schedule = Schedule
+
+		self.LP_Path = os.path.realpath(LP_Path)
+
+		#--- Schedule ---
 		if self.Schedule is None:
 			MaxNrAircraft  = len(self.Airport.Bays)
-			self.Scheduler = ScheduleCreator(self.Airport,MaxNrOverlappingAircraft=MaxNrAircraft)
+			self.Scheduler = ScheduleCreator(self.Airport,MaxNrOverlappingAircraft=MaxNrAircraft,ScheduleFolder="Schedules",AutoRun=False)
+			self.Scheduler.Run(Visualize=True)
 			self.Schedule  = self.Scheduler.Schedule
+
+		#--- Run ---
+		if AutoRun:
+			self.Run()
+
+	#================================================================================
+	# Run Assignment
+	#================================================================================
+	
+	def Run(self):
+
+		self.CreateLP()
+
+	def CreateLP(self):
+
+		LP = []
+
+		LP+=self.GetLP_ExclusionConstraints()
+
+		if not os.path.exists(self.LP_Path): os.makedirs(self.LP_Path)
+		with open(os.path.join(self.LP_Path,"LP.txt"),"w") as LP_File:
+			for line in LP:
+				LP_File.write(line+"\n")
+
+	def GetLP_ExclusionConstraints(self):
+
+		ExclusionConstraints = []
+
+		for aircraft1 in self.Schedule:
+			for aircraft2 in self.Schedule:
+				ExclusionConstraints.append("X_"+aircraft1.ID+"!="+"X_"+aircraft2.ID)
+
+		return ExclusionConstraints
 		
 #****************************************************************************************************
 # Test Code
