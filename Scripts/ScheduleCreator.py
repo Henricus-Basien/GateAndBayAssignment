@@ -30,8 +30,13 @@ from Airlines      import AllAirlines
 # from AircraftTypes import All_AircraftTypes
 from ReferenceDate import ReferenceDate,GetDate
 
-def getRoundedThreshold(a, MinClip):
-    return np.round(float(a) / MinClip) * MinClip
+def getRoundedThreshold(a, MinClip,SetInt=False):
+    frac = float(a) / MinClip
+    if SetInt:
+        frac = int(frac)
+    return np.round(frac) * MinClip
+
+dt0 = datetime.datetime(year=1900,month=1,day=1)
 
 #****************************************************************************************************
 # ScheduleCreator
@@ -50,7 +55,7 @@ class ScheduleCreator(object):
         self.Airport                  = Airport
         self.MaxNrAircraft            = MaxNrAircraft
         self.MaxNrOverlappingAircraft = MaxNrOverlappingAircraft
-        self.Airlines            = Airlines
+        self.Airlines                 = Airlines
 
         self.ScheduleFolder = os.path.realpath(ScheduleFolder)
         if not os.path.exists(self.ScheduleFolder): os.makedirs(self.ScheduleFolder)
@@ -72,11 +77,9 @@ class ScheduleCreator(object):
         if Export:    self.ExportScheduleToExcel()
         if Visualize: self.Visualize()
 
-    def CreateAircraftSchedule(self,TimeRange=[45*60,20*3600],MinTimeStep=5*60,Sort=True,dt0=ReferenceDate):
+    def CreateAircraftSchedule(self,TimeRange=[45*60,20*3600],MinTimeStep=5*60,MaxNrDays=2,Sort=True,RefDate=ReferenceDate,NightStayMandatory=True):
 
         self.Schedule = []
-
-        dt0 = datetime.datetime(year=1900,month=1,day=1)
 
         BetaMean = np.mean([TimeRange[0]]*20+[TimeRange[1]])
         # print "BetaMean",BetaMean/3600.,"h"
@@ -99,22 +102,46 @@ class ScheduleCreator(object):
             #----------------------------------------
             # Arrival/Departure
             #----------------------------------------
-            
+
+            Open_s   = (self.Airport.T_Open-dt0).total_seconds()
+            Close_s  = (self.Airport.T_Close-dt0).total_seconds()
+            Opened_s = (self.Airport.T_Close-self.Airport.T_Open).total_seconds()
+
             #--- Arrival ---
             arrivalper = np.random.uniform()
             if 1:
                 arrivalper = (arrivalper-0.5)*2 # Shift to [-1,+1]
                 arrivalper = abs(arrivalper)**(1./1.4) * (abs(arrivalper)/arrivalper)      # Modulate
                 arrivalper = (arrivalper+1)/2   # Reshift to [0,+1]
-            ArrivalT   = (self.Airport.T_Open-dt0).total_seconds() + arrivalper * (self.Airport.T_Close-self.Airport.T_Open).total_seconds() # np.random.uniform((self.Airport.T_Open-dt0).total_seconds(),(self.Airport.T_Close-dt0).total_seconds())
+            ArrivalT   = Open_s + arrivalper * Opened_s # np.random.uniform((self.Airport.T_Open-dt0).total_seconds(),(self.Airport.T_Close-dt0).total_seconds())
             if MinTimeStep is not None: ArrivalT = getRoundedThreshold(ArrivalT,MinTimeStep)
-            Arrival   = ReferenceDate + datetime.timedelta(seconds=ArrivalT)
+            Arrival   = RefDate + datetime.timedelta(seconds=ArrivalT)
             #--- GroundTime ---
             GroundTime = np.random.beta(2,5)/0.2*BetaMean# np.random.uniform(*TimeRange)
             if GroundTime<TimeRange[0]: GroundTime = TimeRange[0]
             if MinTimeStep is not None: GroundTime = getRoundedThreshold(GroundTime,MinTimeStep)
             #--- Departure ---
-            Departure = Arrival       + datetime.timedelta(seconds=GroundTime)
+            Departure = Arrival + datetime.timedelta(seconds=GroundTime)
+            #.. Check Airport Closed / Night Stay ..
+            if NightStayMandatory:
+                Arrival_s       = (Arrival  -RefDate).total_seconds()
+                Departure_s     = (Departure-RefDate).total_seconds()
+                Departure_s_rel = Departure_s%(24*3600)
+                OverShoot       = Departure_s-Close_s
+                # print Departure_s/3600.,Close_s/3600.,OverShoot/3600.
+                if OverShoot>0 or Arrival.day!=Departure.day:# or Departure_s_rel<Opened_s:
+                    d0 = getRoundedThreshold(Arrival_s,24*3600,SetInt=True)/(24*3600)
+                    Departure_s = (d0+1) + (24*3600) + Open_s + OverShoot
+                    # print "Departure_s_new",Departure_s/3600.
+                    Departure = RefDate+datetime.timedelta(seconds=Departure_s)
+
+            #..............................
+            # Add Days
+            #..............................
+            
+            Day = np.random.randint(MaxNrDays)
+            Arrival  +=datetime.timedelta(days=Day)
+            Departure+=datetime.timedelta(days=Day)
 
             #----------------------------------------
             # Internal Properties
@@ -211,6 +238,14 @@ class ScheduleCreator(object):
 
         if Show: plt.show()
 
+    def ShowAirportDayLines(self,MaxNrDays=2):
+        for i in range(MaxNrDays):
+            Open_t  = (self.Airport.T_Open -dt0).total_seconds()/3600. +24*i
+            Close_t = (self.Airport.T_Close-dt0).total_seconds()/3600. +24*i
+            plt.axvline(x=Open_t ) # Open line
+            plt.axvline(x=Close_t) # Close line
+            plt.axvline(x=24*(i+1),color='red') # Day line
+
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # GanttChart
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -244,8 +279,7 @@ class ScheduleCreator(object):
         # Configure Plot
         #----------------------------------------
         
-        plt.axvline(x=24*1) # Day line
-        plt.axvline(x=24*2) # Day2 line
+        self.ShowAirportDayLines()
 
         #..............................
         # Labels
@@ -259,6 +293,7 @@ class ScheduleCreator(object):
         # Layout
         #..............................
         
+        plt.xlim(left=0)
         plt.tight_layout()
         title=self.Airport.Name+" - Schedule"
         plt.savefig(os.path.join(self.ScheduleFolder,title))
@@ -305,8 +340,7 @@ class ScheduleCreator(object):
         # Configure Plot
         #----------------------------------------
         
-        plt.axvline(x=24*1) # Day line
-        plt.axvline(x=24*2) # Day2 line
+        self.ShowAirportDayLines()
         
         #..............................
         # Label
@@ -319,6 +353,7 @@ class ScheduleCreator(object):
         # Layout
         #..............................
         
+        plt.xlim(left=0)
         plt.tight_layout()
         title = self.Airport.Name+" - Aircraft on Ground"
         plt.savefig(os.path.join(self.ScheduleFolder,title))
@@ -340,7 +375,7 @@ class ScheduleCreator(object):
         for aircraft in self.Schedule:
             GroundTimes.append(aircraft.GroundTime/3600.)
 
-        db = 0.5
+        db = 0.25#0.5
         bins = np.arange(0,np.max(GroundTimes)+db, db) # None   
         plt.hist(GroundTimes,bins=bins)
 
@@ -380,7 +415,9 @@ class ScheduleCreator(object):
         for aircraft in self.Schedule:
             NrPassengers.append(aircraft.NrPassengers)
 
-        plt.hist(NrPassengers)
+        db = 25#50
+        bins = np.arange(0,np.max(NrPassengers)+db, db) # None   
+        plt.hist(NrPassengers,bins=bins)
 
         #----------------------------------------
         # Configure Plot

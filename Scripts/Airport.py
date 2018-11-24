@@ -31,7 +31,7 @@ class Airport(object):
 	# Initialization
 	#================================================================================
 	
-	def __init__(self,Name="TestAirport",T_Open="00:00",T_Close="23:59", Gates=[],Bays=[],WalkingDistances=[]):
+	def __init__(self,Name="TestAirport",T_Open="08:00",T_Close="22:00", Gates=[],Bays=[],WalkingDistances=[]):
 		super(Airport, self).__init__()
 		self.Name = Name
 		self.T_Open  = T_Open

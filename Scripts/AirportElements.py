@@ -46,10 +46,11 @@ class Gate(AirportElement):
 
 class Bay(AirportElement):
 	"""docstring for Bay"""
-	def __init__(self, Name="TestBay",CompatibleAircraft=None):
+	def __init__(self, Name="TestBay",CompatibleAircraftTypes=None,FuelingPossible=True):
 		super(Bay, self).__init__(Name)
 
-		self.CompatibleAircraft = CompatibleAircraft
+		self.CompatibleAircraftTypes = CompatibleAircraftTypes
+		self.FuelingPossible         = FuelingPossible
 
 #****************************************************************************************************
 # Test Code
