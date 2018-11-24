@@ -15,6 +15,7 @@ Email: Henricus@Basien.de
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 from datetime import datetime
+from openpyxl import load_workbook
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Internal
@@ -31,7 +32,7 @@ class Airport(object):
 	# Initialization
 	#================================================================================
 	
-	def __init__(self,Name="TestAirport",T_Open="00:00",T_Close="23:59", Gates=[],Bays=[],WalkingDistances=[]):
+	def __init__(self,Name="TestAirport",T_Open="00:00",T_Close="23:59", Gates=[],Bays=[],WalkingDistances={}):
 		super(Airport, self).__init__()
 		self.Name = Name
 		self.T_Open  = T_Open
@@ -50,10 +51,37 @@ class Airport(object):
 	def GetOperationalTime(self):
 		return (self.T_Close-self.T_Open).total_seconds()
 
+	def ReadWalkingDistancesMatrix(self,filepath):
+
+		wb = load_workbook(filepath)
+		print wb
+		WalkingDistances = dict()
+
+		WalkingDistancesloadedExcel = load_workbook(filepath)
+		WalkingDistancesWorksheet = WalkingDistancesloadedExcel.active
+		for WalkingDistanceRow in WalkingDistancesWorksheet.values:
+			if WalkingDistanceRow[0] in ["Terminal"]:
+				Terminals = []
+				for terminals_readout in range(len(WalkingDistanceRow)-1):
+					terminals_readout += 1
+					Terminals.append(str(WalkingDistanceRow[terminals_readout]))
+			if WalkingDistanceRow[0] not in ["Terminal","Bay"]:
+				if WalkingDistanceRow[0] != None:
+					WalkingDistanceGate = str(WalkingDistanceRow[0])
+					t_counter = 0
+					for Distance in WalkingDistanceRow:
+						if Distance == WalkingDistanceGate:
+							print Distance
+						else:
+							WalkingDistances[(Terminals[t_counter],WalkingDistanceGate)] = int(Distance)
+							t_counter += 1
+
+		return WalkingDistances
+
 	#================================================================================
 	# Info
 	#================================================================================
-	
+
 	def PrintInfo(self):
 
 		print self.GetInfoText()
@@ -67,6 +95,7 @@ class Airport(object):
 
 		InfoText+=" "*3+"Gates: "+str(self.Gates)+"\n"
 		InfoText+=" "*3+"Bays:  "+str(self.Bays) +"\n"
+		InfoText+=" "*3+"WalkingDistances:  "+str(self.WalkingDistances) +"\n"
 		return InfoText	
 
 	def __repr__(self):
@@ -79,3 +108,4 @@ class Airport(object):
 if __name__=="__main__":
 	TestAirport = Airport()
 	print TestAirport
+	

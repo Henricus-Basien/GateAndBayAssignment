@@ -15,6 +15,7 @@ Email: Henricus@Basien.de
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 from collections import OrderedDict
+from os.path import join as JoinPath
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Internal
@@ -37,7 +38,7 @@ class JKIA(Airport):
 		Gates = self.SetupGates()
 		Bays  = self.SetupBays()
 
-		WalkingDistances = []
+		WalkingDistances = self.ReadWalkingDistancesMatrix(JoinPath("Inputs","WalkingDistances.xlsx"))
 
 		super(JKIA, self).__init__(Name="JKIA",T_Open=T_Open,T_Close=T_Close,Gates=Gates,Bays=Bays,WalkingDistances=WalkingDistances)
 
