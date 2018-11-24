@@ -18,291 +18,431 @@ sys.path.insert(0,os.path.join(RootPath,"Scripts"))
 # External
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+import pulp
+
 from time import time as getTime
+import numpy as np
+
+import matplotlib.pyplot as plt
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Internal
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 from ScheduleCreator import ScheduleCreator
-import pulp
+from ReferenceDate import GetDate
 
 #****************************************************************************************************
 # GateAndBayAssignment
 #****************************************************************************************************
 
 class GateAndBayAssignmentSolver(object):
-	"""docstring for GateAndBayAssignmentSolver"""
+    """docstring for GateAndBayAssignmentSolver"""
 
-	#================================================================================
-	# Initialization
-	#================================================================================
-	
-	def __init__(self, Airport,Schedule=None,LP_Path="Temp",LP_filepath=None,AutoRun=True):
-		super(GateAndBayAssignmentSolver, self).__init__()
-		#--- Set Settings ---
-		self.Airport  = Airport
-		self.Schedule = Schedule
+    #================================================================================
+    # Initialization
+    #================================================================================
+    
+    def __init__(self, Airport,Schedule=None,LP_Path="Temp",LP_filepath=None,AutoRun=True):
+        super(GateAndBayAssignmentSolver, self).__init__()
+        #--- Set Settings ---
+        self.Airport  = Airport
+        self.Schedule = Schedule
 
-		self.LP_filepath = LP_filepath
-		if self.LP_filepath is None:
-			self.LP_Path = os.path.realpath(LP_Path)
-		else:
-			self.LP_Path = os.path.split(self.LP_filepath)[0]
+        self.LP_filepath = LP_filepath
+        if self.LP_filepath is None:
+            self.LP_Path = os.path.realpath(LP_Path)
+        else:
+            self.LP_Path = os.path.split(self.LP_filepath)[0]
 
-		#--- Schedule ---
-		if self.Schedule is None:
-			MaxNrAircraft  = len(self.Airport.Bays)
-			self.Scheduler = ScheduleCreator(self.Airport,MaxNrOverlappingAircraft=MaxNrAircraft,ScheduleFolder="Schedules",AutoRun=False)
-			self.Scheduler.Run(Visualize=True)
-			self.Schedule  = self.Scheduler.Schedule
+        #--- Schedule ---
+        if self.Schedule is None:
+            MaxNrAircraft  = len(self.Airport.Bays)
+            self.Scheduler = ScheduleCreator(self.Airport,MaxNrOverlappingAircraft=MaxNrAircraft,ScheduleFolder="Schedules",AutoRun=False)
+            self.Scheduler.Run(Visualize=True)
+            self.Schedule  = self.Scheduler.Schedule
 
-		#--- Run ---
-		if AutoRun:
-			self.Run()
+        #--- Run ---
+        if AutoRun:
+            self.Run()
 
-	#================================================================================
-	# Run Assignment
-	#================================================================================
-	
-	def Run(self,PrintProblem=False):
+    #================================================================================
+    # Run Assignment
+    #================================================================================
+    
+    def Run(self,PrintProblem=False):
 
-		print "*"*100
-		print "Running LP Solver"
-		print "*"*100
+        print "*"*100
+        print "Running LP Solver"
+        print "*"*100
 
-		if self.LP_filepath is None:
-			self.CreateLP()
-		self.ReconstructLP()
-		if PrintProblem: print self.lp_problem
-		self.RunLP()
-		self.PrintResult()
-		self.ExportResult()
+        if self.LP_filepath is None:
+            self.CreateLP()
+        self.ReconstructLP()
+        if PrintProblem: print self.lp_problem
+        self.RunLP()
+        self.PrintResult()
+        self.ExportResult()
+        self.ConvertResult()
+        self.PlotResult()
 
-	#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-	# Create
-	#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-	
-	def CreateLP(self):
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Create
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    
+    def CreateLP(self):
 
-		t0 = getTime()
+        t0 = getTime()
 
-		LP = []
+        LP = []
 
-		#--- Variables & Objectives ---
-		LP+=self.GetLP_Variables()
-		LP+=self.GetLP_ObjectiveFunctions()
-		#--- Constaints ---
-		LP+=self.GetLP_BayComplianceConstraints()
-		LP+=self.GetLP_TimeConstraints()
+        #--- Variables & Objectives ---
+        LP+=self.GetLP_Variables()
+        LP+=self.GetLP_ObjectiveFunctions()
+        #--- Constaints ---
+        LP+=self.GetLP_BayComplianceConstraints()
+        LP+=self.GetLP_TimeConstraints()
 
-		#..............................
-		# Write to File
-		#..............................
-		
-		if not os.path.exists(self.LP_Path): os.makedirs(self.LP_Path)
-		self.LP_filepath = os.path.join(self.LP_Path,"LP.txt")
-		with open(self.LP_filepath,"w") as LP_File:
-			for line in LP:
-				LP_File.write(line+"\n")
+        #..............................
+        # Write to File
+        #..............................
+        
+        if not os.path.exists(self.LP_Path): os.makedirs(self.LP_Path)
+        self.LP_filepath = os.path.join(self.LP_Path,"LP.txt")
+        with open(self.LP_filepath,"w") as LP_File:
+            for line in LP:
+                LP_File.write(line+"\n")
 
-		dt = getTime()-t0
-		print ">"*3+"Problem created       in "+str(round(dt,2))+"s"
+        dt = getTime()-t0
+        print ">"*3+"Problem created       in "+str(round(dt,2))+"s"
 
-	#----------------------------------------
-	# Variables
-	#----------------------------------------
+    #----------------------------------------
+    # Variables
+    #----------------------------------------
 
-	def GetLP_Variables(self):
+    def GetLP_Variables(self):
 
-		self.Variables = []
-		
-		for i in range(len(self.Schedule)):
-			for k in range(len(self.Airport.Bays)):
-				self.Variables.append("X_"+str(i)+"_"+str(k))
-		
-		Variables = ["Var: "+v for v in self.Variables]
+        self.Variables = []
+        
+        for i in range(len(self.Schedule)):
+            for k in range(len(self.Airport.Bays)):
+                self.Variables.append("X_"+str(i)+"_"+str(k))
+        
+        Variables = ["Var: "+v for v in self.Variables]
 
-		Variables.append("#"*100)
+        Variables.append("#"*100)
 
-		return Variables
+        return Variables
 
-	#----------------------------------------
-	# Objective Function(s)
-	#----------------------------------------
-	
-	def GetLP_ObjectiveFunctions(self):
+    #----------------------------------------
+    # Objective Function(s)
+    #----------------------------------------
+    
+    def GetLP_ObjectiveFunctions(self):
 
-		# Objective function
-		ObjectiveFunctions_ = []
+        # Objective function
+        ObjectiveFunctions = []
 
-		#ObjectiveFunctions_ += ['4 * x + 3 * y, "Z"']
+        #..............................
+        # Objective TransportDistance
+        #..............................
+    
+        ObjectiveFunctions.append("# ObjectiveFunction - TransportDistance")
+        ObjectiveFunctions.append("Var: Z1")
 
-		#..............................
-		# Objective #1
-		#..............................
-	
-		ObjectiveFunction_1 = ""
+        ObjectiveFunction_TransportDistance = ""
+        for i in range(len(self.Schedule)):
+            a = self.Schedule[i]
+            for k in range(len(self.Airport.Bays)):
+                ObjectiveFunction_TransportDistance+= "X_"+str(i)+"_"+str(k)+"*"+str(a.NrPassengers)+ "+"
+        ObjectiveFunction_TransportDistance+='0 == Z1'
 
-		for i in range(len(self.Schedule)):
-			a = self.Schedule[i]
-			for k in range(len(self.Airport.Bays)):
-				ObjectiveFunction_1+= "X_"+str(i)+"_"+str(k)+"*"+str(a.NrPassengers)+ "+"
-		ObjectiveFunction_1+='0 , "Z"'
+        ObjectiveFunctions.append(ObjectiveFunction_TransportDistance)
 
-		ObjectiveFunctions_.append(ObjectiveFunction_1)
+        #..............................
+        # Objective AirlinePreference
+        #..............................
+    
+        ObjectiveFunctions.append("# ObjectiveFunction - AirlinePreference")
+        ObjectiveFunctions.append("Var: Z2")
 
-		#..............................
-		# Append Objectives
-		#..............................
-		
-		ObjectiveFunctions = []
+        ObjectiveFunction_AirlinePreference = ""
+        for i in range(len(self.Schedule)):
+            a = self.Schedule[i]
+            for k in range(len(self.Airport.Bays)):
+                if hasattr(a,"BayPreference") and a.BayPreference==k:
+                    ObjectiveFunction_AirlinePreference+= "X_"+str(i)+"_"+str(k)+"*"+str(a.NrPassengers)+ "+"
+        ObjectiveFunction_AirlinePreference+='0 == Z2'
 
-		for i in range(len(ObjectiveFunctions_)):
-			ObjectiveFunctions.append("# ObjectiveFunction Nr."+str(i+1))
-			ObjectiveFunctions.append(ObjectiveFunctions_[i])
+        ObjectiveFunctions.append(ObjectiveFunction_AirlinePreference)
 
-		ObjectiveFunctions.append("#"*100)
+        #..............................
+        # Objective RelocationPenalty
+        #..............................
+    
+        ObjectiveFunctions.append("# ObjectiveFunction - RelocationPenalty")
+        ObjectiveFunctions.append("Var: Z3")
 
-		return ObjectiveFunctions
+        ObjectiveFunction_RelocationPenalty = ""
+        # for i in range(len(self.Schedule)):
+        #   a = self.Schedule[i]
+        #   for k in range(len(self.Airport.Bays)):
+        #       if hasattr(a,"BayPreference") and a.BayPreference==k:
+        #           ObjectiveFunction_RelocationPenalty+= "X_"+str(i)+"_"+str(k)+"*"+str(a.NrPassengers)+ "+"
+        ObjectiveFunction_RelocationPenalty+='0 == Z3'
 
-	#----------------------------------------
-	# Constraints
-	#----------------------------------------
+        ObjectiveFunctions.append(ObjectiveFunction_RelocationPenalty)
 
-	#..............................
-	# Bay Compliance
-	#..............................
-	
-	def GetLP_BayComplianceConstraints(self):
+        #..............................
+        # Combine Objective
+        #..............................
+        
+        ObjectiveFunctions.append("# ObjectiveFunction - Combined")
 
-		BayComplianceConstraints = []
+        Z1_Max = 1 # ToDo
 
-		BayComplianceConstraints.append("# BayCompliance Constraints")
+        alpha = 1.0
+        beta  = Z1_Max
+        gamma = Z1_Max+2*beta
+        ObjectiveFunctions.append(str(alpha)+'*Z1 + '+str(beta)+'*Z2 + '+str(gamma)+'*Z3 , "Z"')        
 
-		for i in range(len(self.Schedule)):
-			BayComplianceConstraint = ""
-			for k in range(len(self.Airport.Bays)):
-				BayComplianceConstraint+="X_"+str(i)+"_"+str(k) + " + "
-			BayComplianceConstraint+=" 0 == 1"
-			BayComplianceConstraints.append(BayComplianceConstraint)
+        #..............................
+        # Addendum
+        #..............................
+        
+        ObjectiveFunctions.append("#"*100)
 
-		return BayComplianceConstraints		
+        return ObjectiveFunctions
 
-	#..............................
-	# Time Constraints
-	#..............................
+    #----------------------------------------
+    # Constraints
+    #----------------------------------------
 
-	def GetLP_TimeConstraints(self):
+    #..............................
+    # Bay Compliance
+    #..............................
+    
+    def GetLP_BayComplianceConstraints(self):
 
-		TimeConstraints = []
+        BayComplianceConstraints = []
 
-		TimeConstraints.append("# Time Constraints")
+        BayComplianceConstraints.append("# BayCompliance Constraints")
 
-		for i in range(len(self.Schedule)):
-			a1 = self.Schedule[i]
-			for j in range(len(self.Schedule)):
-				a2 = self.Schedule[j]
-				#--- Avoid unrequired Constraints ---
-				if i==j: continue
-				if not self.ScheduleClash(a1,a2): continue
-				#--- Cycle all Bays ---
-				for k in range(len(self.Airport.Bays)):
-					TimeConstraints.append("X_"+str(i)+"_"+str(k) + " + " + "X_"+str(j)+"_"+str(k) + " <= 1")
+        for i in range(len(self.Schedule)):
+            BayComplianceConstraint = ""
+            for k in range(len(self.Airport.Bays)):
+                BayComplianceConstraint+="X_"+str(i)+"_"+str(k) + " + "
+            BayComplianceConstraint+=" 0 == 1"
+            BayComplianceConstraints.append(BayComplianceConstraint)
 
-		return TimeConstraints
+        return BayComplianceConstraints     
 
-	def ScheduleClash(self,a1,a2):
-		#--- Base Constraints ---
-		if   a1.Arrival  <a2.Departure and a1.Arrival  >a2.Arrival: return True
-		elif a1.Departure<a2.Departure and a1.Departure>a2.Arrival: return True
-		#--- Mirrored Constraints ---
-		elif a2.Arrival  <a1.Departure and a2.Arrival  >a1.Arrival: return True
-		elif a2.Departure<a1.Departure and a2.Departure>a1.Arrival: return True
+    #..............................
+    # Time Constraints
+    #..............................
 
-		return False
+    def GetLP_TimeConstraints(self):
 
-	#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-	# Reconstruct
-	#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        TimeConstraints = []
 
-	def ReconstructLP(self):
+        TimeConstraints.append("# Time Constraints")
 
-		t0 = getTime()
+        for i in range(len(self.Schedule)):
+            a1 = self.Schedule[i]
+            for j in range(len(self.Schedule)):
+                a2 = self.Schedule[j]
+                #--- Avoid unrequired Constraints ---
+                if i==j: continue
+                if not self.ScheduleClash(a1,a2): continue
+                #--- Cycle all Bays ---
+                for k in range(len(self.Airport.Bays)):
+                    TimeConstraints.append("X_"+str(i)+"_"+str(k) + " + " + "X_"+str(j)+"_"+str(k) + " <= 1")
 
-		self.lp_problem = pulp.LpProblem("Gate&Bay Assignment Problem", pulp.LpMaximize)
+        return TimeConstraints
 
-		with open(self.LP_filepath) as LP_File:
+    def ScheduleClash(self,a1,a2):
+        #--- Base Constraints ---
+        if   a1.Arrival  <a2.Departure and a1.Arrival  >a2.Arrival: return True
+        elif a1.Departure<a2.Departure and a1.Departure>a2.Arrival: return True
+        #--- Mirrored Constraints ---
+        elif a2.Arrival  <a1.Departure and a2.Arrival  >a1.Arrival: return True
+        elif a2.Departure<a1.Departure and a2.Departure>a1.Arrival: return True
 
-			lines = LP_File.readlines()
-			for line in lines:
-				line = line.strip()
-				if line=="" or line[0]=="#": continue
+        return False
 
-				#--- Add Variables ---
-				if line[:4]=="Var:":
-					var = line[5:]
-					exec(var+" = pulp.LpVariable('"+var+"', cat='Binary')")
-					continue
-				#--- Add Constraints ---
-				exec("self.lp_problem+="+line)
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Reconstruct
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-		dt = getTime()-t0
-		print ">"*3+"Problem reconstructed in "+str(round(dt,2))+"s"
+    def ReconstructLP(self):
 
-	#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-	# Run 
-	#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        t0 = getTime()
 
-	def RunLP(self):
+        self.lp_problem = pulp.LpProblem("Gate&Bay Assignment Problem", pulp.LpMaximize)
 
-		t0 = getTime()
+        with open(self.LP_filepath) as LP_File:
 
-		self.lp_problem.solve()
+            lines = LP_File.readlines()
+            for line in lines:
+                line = line.strip()
+                if line=="" or line[0]=="#": continue
 
-		dt = getTime()-t0
-		print ">"*3+"Problem solved        in "+str(round(dt,2))+"s"
+                #--- Add Variables ---
+                if line[:4]=="Var:":
+                    var = line[5:]
+                    if var[0]=="Z":
+                        VarType = "Continuous"
+                    else:
+                        VarType = "Binary"
+                    exec(var+" = pulp.LpVariable('"+var+"', cat='"+VarType+"')")
+                    continue
+                #--- Add Constraints ---
+                exec("self.lp_problem+="+line)
 
-	#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-	# Print
-	#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-	
-	def PrintResult(self,ShowVariables=False):
+        dt = getTime()-t0
+        print ">"*3+"Problem reconstructed in "+str(round(dt,2))+"s"
 
-		print "*"*100
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Run 
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-		#----------------------------------------
-		# Variables
-		#----------------------------------------
-		
-		if ShowVariables:
-			print "Variables:"
+    def RunLP(self):
 
-			for variable in self.lp_problem.variables():
-				print " "*3+"{} = {}".format(variable.name, variable.varValue)
+        t0 = getTime()
 
-		#----------------------------------------
-		# Status
-		#----------------------------------------
-		
-		print "Status: "+str(pulp.LpStatus[self.lp_problem.status])
+        self.lp_problem.solve()
 
-		#----------------------------------------
-		# Objective
-		#----------------------------------------
-		
-		print "Objective:"
-		print " "*3+str(pulp.value(self.lp_problem.objective))
+        dt = getTime()-t0
+        print ">"*3+"Problem solved        in "+str(round(dt,2))+"s"
 
-	#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-	# Export
-	#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-	
-	def ExportResult(self):
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Print
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    
+    def PrintResult(self,ShowVariables=False):
 
-		with open(os.path.join(self.LP_Path,"LP_result.txt"),"w") as ResultsFile:
-			for variable in self.lp_problem.variables():
-				ResultsFile.write("{} = {}".format(variable.name, variable.varValue)+"\n")
+        print "*"*100
+
+        #----------------------------------------
+        # Variables
+        #----------------------------------------
+        
+        if ShowVariables:
+            print "Variables:"
+
+            for variable in self.lp_problem.variables():
+                print " "*3+"{} = {}".format(variable.name, variable.varValue)
+
+        #----------------------------------------
+        # Status
+        #----------------------------------------
+        
+        print "Status: "+str(pulp.LpStatus[self.lp_problem.status])
+
+        #----------------------------------------
+        # Objective
+        #----------------------------------------
+        
+        print "Objective:"
+        print " "*3+str(pulp.value(self.lp_problem.objective))
+
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Export
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    
+    def ExportResult(self):
+
+        with open(os.path.join(self.LP_Path,"LP_result.txt"),"w") as ResultsFile:
+            for variable in self.lp_problem.variables():
+                ResultsFile.write("{} = {}".format(variable.name, variable.varValue)+"\n")
+
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Convert Result
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        
+    def ConvertResult(self,PrintResult=True):
+
+        self.BayAssignment = {}
+        self.BayAssignment_Dual = {}
+
+        for variable in self.lp_problem.variables():
+            if variable.varValue==0: continue
+            if variable.name[0]=="Z": continue
+            X,i,k = variable.name.split("_")
+            i = int(i);k = int(k)
+
+            K = str(k)
+            self.BayAssignment[self.Schedule[i].ID] = self.Airport.Bays[k]
+            #--- Dual ---
+            if not K in self.BayAssignment_Dual:
+                self.BayAssignment_Dual[K] = []
+            self.BayAssignment_Dual[K].append(self.Schedule[i])
+
+        if PrintResult:
+            for key in self.BayAssignment.keys():
+                print key,self.BayAssignment[key]
+
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Plot Result
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    
+    def PlotResult(self,Show=True):
+
+        if Show:
+            plt.close('all')
+
+        fig,ax=plt.subplots(figsize=(16,9),dpi=120)
+
+        #----------------------------------------
+        # Preprocess
+        #----------------------------------------
+        
+        # MinDate = ReferenceDate
+        MinDate = GetDate(np.min([a.Arrival for a in self.Schedule]))
+
+        #----------------------------------------
+        # Set Data
+        #----------------------------------------
+        
+        labels=[]
+        for k in range(len(self.Airport.Bays)):
+            #--- Add Labels ---
+            Bay = self.Airport.Bays[k]
+            labels.append(str(Bay))
+            #--- Check Use ---
+            K = str(k)
+            if not K in self.BayAssignment_Dual.keys(): continue
+            for aircraft in self.BayAssignment_Dual[K]:
+                # color = None
+                t_a = (aircraft.Arrival  -MinDate).total_seconds()/3600.
+                t_d = (aircraft.Departure-MinDate).total_seconds()/3600.
+                dt = t_d-t_a
+                ax.broken_barh([(t_a,dt)], (k-0.4,0.8))
+
+        #----------------------------------------
+        # Configure Plot
+        #----------------------------------------
+        
+        plt.axvline(x=24*1) # Day line
+        plt.axvline(x=24*2) # Day2 line
+
+        #..............................
+        # Labels
+        #..............................
+        
+        ax.set_yticks(range(len(labels)))
+        ax.set_yticklabels(labels, fontsize=5) 
+        ax.set_xlabel("Time [h]")
+
+        #..............................
+        # Layout
+        #..............................
+        
+        plt.tight_layout()
+        title=self.Airport.Name+" - Bay Assignment"
+        plt.savefig(os.path.join(self.Scheduler.ScheduleFolder,title))
+        if Show:
+            plt.show(title)
 
 #****************************************************************************************************
 # Test Code
@@ -310,17 +450,17 @@ class GateAndBayAssignmentSolver(object):
 
 if __name__=="__main__":
 
-	#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-	# Imports
-	#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-	
-	from JKIA import JKIA
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Imports
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    
+    from JKIA import JKIA
 
-	#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-	# Run Test
-	#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-	
-	airport = JKIA()
-	airport.PrintInfo()
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Run Test
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    
+    airport = JKIA()
+    airport.PrintInfo()
 
-	GABA_Solver = GateAndBayAssignmentSolver(airport)
+    GABA_Solver = GateAndBayAssignmentSolver(airport)
