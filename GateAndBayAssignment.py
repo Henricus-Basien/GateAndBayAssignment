@@ -18,7 +18,7 @@ Objectives:
 Constraints:
     (V) Bay Compliance
     (V) Bay Compatibility / Fueling
-    ( ) Night Stays
+    (~) Night Stays
     ( ) Domestic or International
     ( ) Adjacency
 """
