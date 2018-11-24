@@ -18,7 +18,7 @@ Email: Henricus@Basien.de
 # Internal
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-from AircraftTypes import All_AircraftTypes
+from AircraftTypes import All_AircraftTypes,GetAircraftsByType
 
 #****************************************************************************************************
 # Airlines
@@ -59,8 +59,28 @@ class Airline(object):
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 AllAirlines = []
-AllAirlines.append(Airline("KQ"))
-AllAirlines.append(Airline("KLM"))
+AllAirlines.append(Airline("KQ" , AircraftTypes=GetAircraftsByType(["B737", "B738", "B73J", "B773", "B778", "B788", "E90", "AT7"])))
+AllAirlines.append(Airline("KLM", AircraftTypes=GetAircraftsByType(["B747"                                                      ])))
+AllAirlines.append(Airline("EK" , AircraftTypes=GetAircraftsByType(["B773"                                                      ])))
+AllAirlines.append(Airline("ET" , AircraftTypes=GetAircraftsByType(["B737", "B738"                                              ])))
+AllAirlines.append(Airline("EY" , AircraftTypes=GetAircraftsByType(["A320"                                                      ])))
+AllAirlines.append(Airline("G"  , AircraftTypes=GetAircraftsByType(["A320"                                                      ])))
+AllAirlines.append(Airline("LX" , AircraftTypes=GetAircraftsByType(["A330"                                                      ])))
+AllAirlines.append(Airline("MK" , AircraftTypes=GetAircraftsByType(["A332"                                                      ])))
+AllAirlines.append(Airline("MS" , AircraftTypes=GetAircraftsByType(["A320"                                                      ])))
+AllAirlines.append(Airline("PW" , AircraftTypes=GetAircraftsByType(["AT7"                                                       ])))
+AllAirlines.append(Airline("QR" , AircraftTypes=GetAircraftsByType(["A320"                                                      ])))
+AllAirlines.append(Airline("SA" , AircraftTypes=GetAircraftsByType(["A320"                                                      ])))
+AllAirlines.append(Airline("SN" , AircraftTypes=GetAircraftsByType(["A320", "A332"                                              ])))
+AllAirlines.append(Airline("TK" , AircraftTypes=GetAircraftsByType(["A330"                                                      ])))
+AllAirlines.append(Airline("TM" , AircraftTypes=GetAircraftsByType(["E90"                                                       ])))
+AllAirlines.append(Airline("CZ" , AircraftTypes=GetAircraftsByType(["A330"                                                      ])))
+AllAirlines.append(Airline("WB" , AircraftTypes=GetAircraftsByType(["B737", "Q400"                                              ])))
+AllAirlines.append(Airline("BA" , AircraftTypes=GetAircraftsByType(["B772"                                                      ])))
+AllAirlines.append(Airline("SV" , AircraftTypes=GetAircraftsByType(["A320"                                                      ])))
+
+
+
 
 #****************************************************************************************************
 # Test Code

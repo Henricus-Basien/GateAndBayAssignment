@@ -34,13 +34,15 @@ class Aircraft(object):
 	# Initialization
 	#================================================================================
 	
+	Type = "TestAircraft"
 	MaxNrPassengers = 100
 	WB              = False
 
-	def __init__(self, ID="FN0",Arrival="00:00",Departure="23:59",Type="TestAircraft",NrPassengers=None,PrefferedGates=None,NeedsFueling=False):
+	def __init__(self, ID="FN0",Arrival="00:00",Departure="23:59",Type=None,NrPassengers=None,PrefferedGates=None,NeedsFueling=False):
 		super(Aircraft, self).__init__()
 		self.ID             = str(ID)        # [str]
-		self.Type           = Type           # [str]
+		if Type is not None:
+			self.Type       = Type           # [str]
 		self.Arrival        = Arrival        # [datetime]
 		self.Departure      = Departure      # [datetime]
 		if   type(self.Arrival)   ==str:   self.Arrival   = datetime.strptime(self.Arrival  , '%H:%M')
