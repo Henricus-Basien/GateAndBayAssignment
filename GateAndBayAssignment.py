@@ -7,6 +7,23 @@ Email: Henricus@Basien.de
 '''
 
 #****************************************************************************************************
+# ToDo
+#****************************************************************************************************
+
+"""
+Objectives:
+    ( ) Walking Distances
+    ( ) Towing
+    ( ) Penalty
+Constraints:
+    (V) Bay Compliance
+    (V) Bay Compatibility / Fueling
+    (~) Night Stays
+    ( ) Domestic or International
+    ( ) Adjacency
+"""
+
+#****************************************************************************************************
 # Imports
 #****************************************************************************************************
 
@@ -17,6 +34,8 @@ sys.path.insert(0,os.path.join(RootPath,"Scripts"))
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # External
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+from collections import OrderedDict
 
 import pulp
 
@@ -76,6 +95,8 @@ class GateAndBayAssignmentSolver(object):
         print "Running LP Solver"
         print "*"*100
 
+        t0 = getTime()
+
         if self.LP_filepath is None:
             self.CreateLP()
         self.ReconstructLP()
@@ -84,6 +105,12 @@ class GateAndBayAssignmentSolver(object):
         self.PrintResult()
         self.ExportResult()
         self.ConvertResult()
+
+        dt = getTime()-t0
+        print "+"*50
+        print "Complete Problem solved in "+str(round(dt/60.,1))+" min"
+        print "+"*50
+
         self.PlotResult()
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -108,7 +135,7 @@ class GateAndBayAssignmentSolver(object):
         #..............................
         
         if not os.path.exists(self.LP_Path): os.makedirs(self.LP_Path)
-        self.LP_filepath = os.path.join(self.LP_Path,"LP.txt")
+        self.LP_filepath = os.path.join(self.LP_Path,self.Airport.Name+" - GateAndBayAssignment.PuLP")
         with open(self.LP_filepath,"w") as LP_File:
             for line in LP:
                 LP_File.write(line+"\n")
@@ -270,6 +297,26 @@ class GateAndBayAssignmentSolver(object):
 
         return False
 
+    #----------------------------------------
+    # Bay Compatibility
+    #----------------------------------------
+    
+    def GetLP_BayCompatibilityConstraints(self):
+
+        BayCompatibilityConstraints = []
+
+        BayCompatibilityConstraints.append("# BayCompatibility Constraints")
+
+        for i in range(len(self.Schedule)):
+            a = self.Schedule[i]
+            #--- Cycle all Bays ---
+            for k in range(len(self.Airport.Bays)):
+                b = self.Airport.Bays[i]
+                if a.Type not in b.CompatibleAircraftTypes or (a.NeedsFueling and not b.FuelingPossible):
+                    BayCompatibilityConstraints.append("X_"+str(i)+"_"+str(k)+" == 0")
+
+        return BayCompatibilityConstraints
+
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Reconstruct
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -362,8 +409,8 @@ class GateAndBayAssignmentSolver(object):
         
     def ConvertResult(self,PrintResult=True):
 
-        self.BayAssignment = {}
-        self.BayAssignment_Dual = {}
+        self.BayAssignment      = OrderedDict()
+        self.BayAssignment_Dual = OrderedDict()
 
         for variable in self.lp_problem.variables():
             if variable.varValue==0: continue
@@ -378,6 +425,10 @@ class GateAndBayAssignmentSolver(object):
                 self.BayAssignment_Dual[K] = []
             self.BayAssignment_Dual[K].append(self.Schedule[i])
 
+        #--- Sort ---
+        self.BayAssignment_Dual = OrderedDict(sorted(self.BayAssignment_Dual.items(), key=lambda t: t[0]))
+
+        #--- Print ---
         if PrintResult:
             for key in self.BayAssignment.keys():
                 print key,self.BayAssignment[key]
@@ -386,7 +437,7 @@ class GateAndBayAssignmentSolver(object):
     # Plot Result
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     
-    def PlotResult(self,Show=True):
+    def PlotResult(self,fontsize=4,Show=True):
 
         if Show:
             plt.close('all')
@@ -419,25 +470,30 @@ class GateAndBayAssignmentSolver(object):
                 dt = t_d-t_a
                 ax.broken_barh([(t_a,dt)], (k-0.4,0.8))
 
+                if 1:
+                    ax.annotate(aircraft.Type+" - ID: "+aircraft.ID+"\n"+"> #P: "+str(aircraft.NrPassengers), (t_a,k),
+                    fontsize=fontsize,
+                    horizontalalignment='left', verticalalignment='center')
+
         #----------------------------------------
         # Configure Plot
         #----------------------------------------
         
-        plt.axvline(x=24*1) # Day line
-        plt.axvline(x=24*2) # Day2 line
+        self.Scheduler.ShowAirportDayLines()
 
         #..............................
         # Labels
         #..............................
         
         ax.set_yticks(range(len(labels)))
-        ax.set_yticklabels(labels, fontsize=5) 
+        ax.set_yticklabels(labels, fontsize=fontsize) 
         ax.set_xlabel("Time [h]")
 
         #..............................
         # Layout
         #..............................
         
+        plt.xlim(left=0)
         plt.tight_layout()
         title=self.Airport.Name+" - Bay Assignment"
         plt.savefig(os.path.join(self.Scheduler.ScheduleFolder,title))

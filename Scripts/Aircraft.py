@@ -21,7 +21,7 @@ from copy import copy
 # Internal
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-from ReferenceDate import GetDate
+from ReferenceDate import ReferenceDate,GetDate
 
 #****************************************************************************************************
 # Aircraft
@@ -55,9 +55,9 @@ class Aircraft(object):
 
 		#--- Arrival/Departure Data ---
 		self.Arrival_date   = GetDate(self.Arrival)
-		self.Arrival_t      = (self.Arrival  -self.Arrival_date).total_seconds()
+		self.Arrival_t      = (self.Arrival  -ReferenceDate).total_seconds()
 		self.Departure_date = GetDate(self.Departure)
-		self.Departure_t    = (self.Departure-self.Arrival_date).total_seconds()
+		self.Departure_t    = (self.Departure-ReferenceDate).total_seconds()
 
 		self.GroundTime = self.Departure_t-self.Arrival_t
 
@@ -88,6 +88,7 @@ class Aircraft(object):
 		#--- Get Percentage ---
 		per = GT/GT_Max
 		if per>1: per=1
+		if per<0: per=0
 		#--- Get Color ---
 		color = [per,1-per,0]
 		# print self.Arrival,self.Departure,GT,color
