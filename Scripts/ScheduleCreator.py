@@ -26,8 +26,6 @@ import matplotlib.pyplot as plt
 # Internal
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-from Airlines      import AllAirlines
-# from AircraftTypes import All_AircraftTypes
 from ReferenceDate import ReferenceDate,GetDate
 
 def getRoundedThreshold(a, MinClip,SetInt=False):
@@ -49,13 +47,12 @@ class ScheduleCreator(object):
     # Initialization
     #================================================================================
     
-    def __init__(self, Airport,MaxNrAircraft=None,MaxNrOverlappingAircraft=30,Airlines=AllAirlines,ScheduleFolder="Temp",AutoRun=True):
+    def __init__(self, Airport,MaxNrAircraft=None,MaxNrOverlappingAircraft=30,ScheduleFolder="Temp",AutoRun=True):
         super(ScheduleCreator, self).__init__()
 
         self.Airport                  = Airport
         self.MaxNrAircraft            = MaxNrAircraft
         self.MaxNrOverlappingAircraft = MaxNrOverlappingAircraft
-        self.Airlines                 = Airlines
 
         self.ScheduleFolder = os.path.realpath(ScheduleFolder)
         if not os.path.exists(self.ScheduleFolder): os.makedirs(self.ScheduleFolder)
@@ -90,7 +87,7 @@ class ScheduleCreator(object):
             # Airline
             #----------------------------------------
             
-            airline = np.random.choice(self.Airlines)
+            airline = np.random.choice(self.Airport.Airlines)
 
             #----------------------------------------
             # AircraftType
@@ -217,8 +214,8 @@ class ScheduleCreator(object):
             ws.cell(row=i+2, column=1).value = aircraft.ID
             ws.cell(row=i+2, column=2).value = aircraft.Type
             ws.cell(row=i+2, column=3).value = aircraft.Airline.Name
-            ws.cell(row=i+2, column=4).value = aircraft.Arrival.time()
-            ws.cell(row=i+2, column=5).value = aircraft.Departure.time()
+            ws.cell(row=i+2, column=4).value = aircraft.Arrival#.time()
+            ws.cell(row=i+2, column=5).value = aircraft.Departure#.time()
             ws.cell(row=i+2, column=6).value = aircraft.NrPassengers
             ws.cell(row=i+2, column=7).value = aircraft.Domestic
             ws.cell(row=i+2, column=8).value = aircraft.NeedsFueling

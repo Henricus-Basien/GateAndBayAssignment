@@ -14,6 +14,7 @@ Email: Henricus@Basien.de
 # External
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+from copy import copy
 from collections import OrderedDict
 from os.path import join as JoinPath
 
@@ -21,150 +22,193 @@ from os.path import join as JoinPath
 # Internal
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-from Airport import Airport
+from Airport         import Airport
 from AirportElements import Gate,Bay
+from Airlines        import AllAirlines
 
 #****************************************************************************************************
 # JKIA
 #****************************************************************************************************
 
 class JKIA(Airport):
-	"""docstring for JKIA"""
-	def __init__(self):
+    """docstring for JKIA"""
+    def __init__(self):
 
-		T_Open  = "06:00"
-		T_Close = "23:59"
-		self.SetupAircraftGroups()
-		Gates = self.SetupGates()
-		Bays  = self.SetupBays()
+        T_Open  = "06:00"
+        T_Close = "23:59"
+        self.SetupAircraftGroups()
+        Gates = self.SetupGates()
+        Bays  = self.SetupBays()
 
-		WalkingDistances = self.ReadWalkingDistancesMatrix(JoinPath("Inputs","WalkingDistances.xlsx"))
+        WalkingDistances = self.ReadWalkingDistancesMatrix(JoinPath("Inputs","WalkingDistances.xlsx"))
 
-		super(JKIA, self).__init__(Name="JKIA",T_Open=T_Open,T_Close=T_Close,Gates=Gates,Bays=Bays,WalkingDistances=WalkingDistances)
+        super(JKIA, self).__init__(Name="JKIA",T_Open=T_Open,T_Close=T_Close,Gates=Gates,Bays=Bays,WalkingDistances=WalkingDistances)
 
-	def SetupAircraftGroups(self):
+        self.SetAirlines()
 
-		self.AircraftGroups = OrderedDict()
-		self.AircraftGroups["A"] = ["AT4","AT7","Q400"]
-		self.AircraftGroups["B"] = ["B733","E70"]
-		self.AircraftGroups["C"] = ["E90"]
-		self.AircraftGroups["D"] = ["B737","B738","A320"]
-		self.AircraftGroups["E"] = ["B73J"]
-		self.AircraftGroups["F"] = ["B787","B788","A330","A332","B767"]
-		self.AircraftGroups["G"] = ["B772","B773"]
-		self.AircraftGroups["H"] = ["B747"]
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Airlines
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-	def GetAircraftTypesByGroup(self,Groups):
-		AircraftTypes = []
-		for group in Groups:
-			AircraftTypes+=self.AircraftGroups[group]
-		return AircraftTypes
+    def SetAirlines(self):
 
-	def SetupGates(self):
+        self.Airlines = []
 
-		Gates = []
-		
-		Gates.append(Gate(Name="D2A"))
-		Gates.append(Gate(Name="D2B"))
-		Gates.append(Gate(Name="D2C"))
-		Gates.append(Gate(Name="D3A"))
-		Gates.append(Gate(Name="D3B"))
-		Gates.append(Gate(Name="D3C"))
+        for airline in AllAirlines:
+            airline = copy(airline)
 
-		Gates.append(Gate(Name="C4L"))
-		Gates.append(Gate(Name="C4R"))
-		Gates.append(Gate(Name="C5" ))
-		Gates.append(Gate(Name="C6" ))
+            if   airline.Name=="KQ" : airline.Terminal = "D"
+            elif airline.Name=="KLM": airline.Terminal = "A"
+            elif airline.Name=="EK" : airline.Terminal = "A"
+            elif airline.Name=="ET" : airline.Terminal = "A"
+            elif airline.Name=="EY" : airline.Terminal = "A"
+            elif airline.Name=="G"  : airline.Terminal = "A"
+            elif airline.Name=="LX" : airline.Terminal = "A"
+            elif airline.Name=="MK" : airline.Terminal = "A"
+            elif airline.Name=="MS" : airline.Terminal = "A"
+            elif airline.Name=="PW" : airline.Terminal = "A"
+            elif airline.Name=="QR" : airline.Terminal = "A"
+            elif airline.Name=="SA" : airline.Terminal = "A"
+            elif airline.Name=="SN" : airline.Terminal = "A"
+            elif airline.Name=="TK" : airline.Terminal = "A"
+            elif airline.Name=="TM" : airline.Terminal = "A"
+            elif airline.Name=="CZ" : airline.Terminal = "A"
+            elif airline.Name=="WB" : airline.Terminal = "A"
+            elif airline.Name=="BA" : airline.Terminal = "A"
+            elif airline.Name=="SV" : airline.Terminal = "A"
+            else:
+                print "WARNING: Airline '"+airline.Name+"' has no preferably assigned Terminal!!!"
+                airline.Terminal = "A"
 
-		Gates.append(Gate(Name="B7" ))
-		Gates.append(Gate(Name="B8" ))
-		Gates.append(Gate(Name="B9" ))
-		Gates.append(Gate(Name="B10"))
-		Gates.append(Gate(Name="B11"))
-
-		Gates.append(Gate(Name="A12"))
-		Gates.append(Gate(Name="A13"))
-		Gates.append(Gate(Name="A14"))
-		Gates.append(Gate(Name="A15"))
-		Gates.append(Gate(Name="A16"))
-		Gates.append(Gate(Name="A17"))
-		Gates.append(Gate(Name="A18"))
-		Gates.append(Gate(Name="A19"))
-		Gates.append(Gate(Name="A20"))
+            self.Airlines.append(airline)
 
 
-		# for i in range(30):
-		# 	Gates.append(Gate(Name="X"+str(i+1)))
-		print Gates
-		return Gates
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Aircraft Groups
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-	def SetupBays(self):
+    def SetupAircraftGroups(self):
 
-		Bays = []
+        self.AircraftGroups = OrderedDict()
+        self.AircraftGroups["A"] = ["AT4","AT7","Q400"]
+        self.AircraftGroups["B"] = ["B733","E70"]
+        self.AircraftGroups["C"] = ["E90"]
+        self.AircraftGroups["D"] = ["B737","B738","A320"]
+        self.AircraftGroups["E"] = ["B73J"]
+        self.AircraftGroups["F"] = ["B787","B788","A330","A332","B767"]
+        self.AircraftGroups["G"] = ["B772","B773"]
+        self.AircraftGroups["H"] = ["B747"]
 
-		Bays.append(Bay(Name="D2A",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B"])))
-		Bays.append(Bay(Name="D2B",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C"])))
-		Bays.append(Bay(Name="D2C",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
-		Bays.append(Bay(Name="D3A",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B"])))
-		Bays.append(Bay(Name="D3B",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C"])))
-		Bays.append(Bay(Name="D3C",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
-		
-		Bays.append(Bay(Name="C4L",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G"])))
-		Bays.append(Bay(Name="C4R",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E"])))
-		Bays.append(Bay(Name="C5" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
-		Bays.append(Bay(Name="C6" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
-		
-		Bays.append(Bay(Name="B7" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
-		Bays.append(Bay(Name="B8" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
-		Bays.append(Bay(Name="B9" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
-		Bays.append(Bay(Name="B10",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
-		Bays.append(Bay(Name="B11",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
-		
-		Bays.append(Bay(Name="A12",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E"])))
-		Bays.append(Bay(Name="A13",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E"])))
-		Bays.append(Bay(Name="A14",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E"])))
-		Bays.append(Bay(Name="A15",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E"])))
-		Bays.append(Bay(Name="A16",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E"])))
-		Bays.append(Bay(Name="A17",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G"])))
-		Bays.append(Bay(Name="A18",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
-		Bays.append(Bay(Name="A19",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
-		Bays.append(Bay(Name="A20",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E"])))
-		
-		Bays.append(Bay(Name="J1" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E","F","G","H"])))
-		Bays.append(Bay(Name="J2A",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
-		Bays.append(Bay(Name="J2B",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
-		Bays.append(Bay(Name="J3A",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
-		Bays.append(Bay(Name="J3B",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
-		Bays.append(Bay(Name="J4A",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
-		Bays.append(Bay(Name="J4B",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
-		Bays.append(Bay(Name="J5" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E","F","G","H"])))
-		
-		Bays.append(Bay(Name="J6" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
-		Bays.append(Bay(Name="J7" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"]),FuelingPossible=False))
-		Bays.append(Bay(Name="J8" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"]),FuelingPossible=False))
-		Bays.append(Bay(Name="J9" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"]),FuelingPossible=False))
+    def GetAircraftTypesByGroup(self,Groups):
+        AircraftTypes = []
+        for group in Groups:
+            AircraftTypes+=self.AircraftGroups[group]
+        return AircraftTypes
 
-		Bays.append(Bay(Name="H1" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
-		Bays.append(Bay(Name="H2" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
-		Bays.append(Bay(Name="H3" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
-		Bays.append(Bay(Name="H4" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
-		Bays.append(Bay(Name="H5" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
-		Bays.append(Bay(Name="H6" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
-		Bays.append(Bay(Name="H7" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
-		Bays.append(Bay(Name="H8" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
-		Bays.append(Bay(Name="H9" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
-		Bays.append(Bay(Name="H10",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
+    def SetupGates(self):
 
-		# Bays = []
-		# for i in range(30):
-		# 	Bays.append(Bay(Name="X"+str(i+1)))
+        Gates = []
+        
+        Gates.append(Gate(Name="D2A"))
+        Gates.append(Gate(Name="D2B"))
+        Gates.append(Gate(Name="D2C"))
+        Gates.append(Gate(Name="D3A"))
+        Gates.append(Gate(Name="D3B"))
+        Gates.append(Gate(Name="D3C"))
 
-		return Bays
+        Gates.append(Gate(Name="C4L"))
+        Gates.append(Gate(Name="C4R"))
+        Gates.append(Gate(Name="C5" ))
+        Gates.append(Gate(Name="C6" ))
+
+        Gates.append(Gate(Name="B7" ))
+        Gates.append(Gate(Name="B8" ))
+        Gates.append(Gate(Name="B9" ))
+        Gates.append(Gate(Name="B10"))
+        Gates.append(Gate(Name="B11"))
+
+        Gates.append(Gate(Name="A12"))
+        Gates.append(Gate(Name="A13"))
+        Gates.append(Gate(Name="A14"))
+        Gates.append(Gate(Name="A15"))
+        Gates.append(Gate(Name="A16"))
+        Gates.append(Gate(Name="A17"))
+        Gates.append(Gate(Name="A18"))
+        Gates.append(Gate(Name="A19"))
+        Gates.append(Gate(Name="A20"))
+
+
+        # for i in range(30):
+        #   Gates.append(Gate(Name="X"+str(i+1)))
+        print Gates
+        return Gates
+
+    def SetupBays(self):
+
+        Bays = []
+
+        Bays.append(Bay(Name="D2A",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B"])))
+        Bays.append(Bay(Name="D2B",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C"])))
+        Bays.append(Bay(Name="D2C",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
+        Bays.append(Bay(Name="D3A",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B"])))
+        Bays.append(Bay(Name="D3B",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C"])))
+        Bays.append(Bay(Name="D3C",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
+        
+        Bays.append(Bay(Name="C4L",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G"])))
+        Bays.append(Bay(Name="C4R",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E"])))
+        Bays.append(Bay(Name="C5" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
+        Bays.append(Bay(Name="C6" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
+        
+        Bays.append(Bay(Name="B7" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
+        Bays.append(Bay(Name="B8" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
+        Bays.append(Bay(Name="B9" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
+        Bays.append(Bay(Name="B10",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
+        Bays.append(Bay(Name="B11",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
+        
+        Bays.append(Bay(Name="A12",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E"])))
+        Bays.append(Bay(Name="A13",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E"])))
+        Bays.append(Bay(Name="A14",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E"])))
+        Bays.append(Bay(Name="A16",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E"])))
+        Bays.append(Bay(Name="A17",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G"])))
+        Bays.append(Bay(Name="A18",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
+        Bays.append(Bay(Name="A19",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
+        Bays.append(Bay(Name="A20",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E"])))
+        
+        Bays.append(Bay(Name="J1" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E","F","G","H"])))
+        Bays.append(Bay(Name="J2A",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
+        Bays.append(Bay(Name="J2B",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
+        Bays.append(Bay(Name="J3A",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
+        Bays.append(Bay(Name="J3B",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
+        Bays.append(Bay(Name="J4A",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
+        Bays.append(Bay(Name="J4B",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
+        Bays.append(Bay(Name="J5" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E","F","G","H"])))
+        
+        Bays.append(Bay(Name="J6" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
+        Bays.append(Bay(Name="J7" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"]),FuelingPossible=False))
+        Bays.append(Bay(Name="J8" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"]),FuelingPossible=False))
+        Bays.append(Bay(Name="J9" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"]),FuelingPossible=False))
+
+        Bays.append(Bay(Name="H1" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
+        Bays.append(Bay(Name="H2" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
+        Bays.append(Bay(Name="H3" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
+        Bays.append(Bay(Name="H4" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
+        Bays.append(Bay(Name="H5" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
+        Bays.append(Bay(Name="H6" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
+        Bays.append(Bay(Name="H7" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
+        Bays.append(Bay(Name="H8" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
+        Bays.append(Bay(Name="H9" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
+        Bays.append(Bay(Name="H10",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
+
+        # Bays = []
+        # for i in range(30):
+        #   Bays.append(Bay(Name="X"+str(i+1)))
+
+        return Bays
 
 #****************************************************************************************************
 # Test Code
 #****************************************************************************************************
 
 if __name__=="__main__":
-	JKIA = JKIA()
-	print JKIA
+    JKIA = JKIA()
+    print JKIA

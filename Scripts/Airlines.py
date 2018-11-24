@@ -79,9 +79,6 @@ AllAirlines.append(Airline("WB" , AircraftTypes=GetAircraftsByType(["B737", "Q40
 AllAirlines.append(Airline("BA" , AircraftTypes=GetAircraftsByType(["B772"                                                      ])))
 AllAirlines.append(Airline("SV" , AircraftTypes=GetAircraftsByType(["A320"                                                      ])))
 
-
-
-
 #****************************************************************************************************
 # Test Code
 #****************************************************************************************************

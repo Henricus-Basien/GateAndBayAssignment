@@ -16,6 +16,7 @@ Email: Henricus@Basien.de
 
 from datetime import datetime
 from openpyxl import load_workbook
+from Airlines import AllAirlines
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Internal
@@ -32,7 +33,7 @@ class Airport(object):
 	# Initialization
 	#================================================================================
 	
-	def __init__(self,Name="TestAirport",T_Open="08:00",T_Close="22:00", Gates=[],Bays=[],WalkingDistances=[]):
+	def __init__(self,Name="TestAirport",T_Open="08:00",T_Close="22:00", Gates=[],Bays=[],WalkingDistances={},Airlines=None):
 		super(Airport, self).__init__()
 		self.Name = Name
 		self.T_Open  = T_Open
@@ -43,6 +44,9 @@ class Airport(object):
 		self.Gates = Gates
 		self.Bays  = Bays
 		self.WalkingDistances = WalkingDistances
+		if Airlines is None:
+			Airlines = AllAirlines
+		self.Airlines = Airlines
 
 	#================================================================================
 	# Evaluation

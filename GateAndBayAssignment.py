@@ -12,14 +12,14 @@ Email: Henricus@Basien.de
 
 """
 Objectives:
-    ( ) Walking Distances
+    (V) Walking Distances
     ( ) Towing
     ( ) Penalty
 Constraints:
     (V) Bay Compliance
     (V) Bay Compatibility / Fueling
     (~) Night Stays
-    ( ) Domestic or International
+    (~) Domestic or International
     ( ) Adjacency
 """
 
@@ -64,27 +64,36 @@ class GateAndBayAssignmentSolver(object):
     
     def __init__(self, Airport,Schedule=None,LP_Path="Temp",LP_filepath=None,AutoRun=True):
         super(GateAndBayAssignmentSolver, self).__init__()
-        #--- Set Settings ---
+        #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        # Set Settings
+        #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        
         self.Airport  = Airport
         self.Schedule = Schedule
 
+        #--- LP ---
         self.LP_filepath = LP_filepath
         if self.LP_filepath is None:
             self.LP_Path = os.path.realpath(LP_Path)
         else:
             self.LP_Path = os.path.split(self.LP_filepath)[0]
 
-        #--- Schedule ---
+        #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        # Schedule
+        #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
         if self.Schedule is None:
             MaxNrAircraft  = len(self.Airport.Bays)
             self.Scheduler = ScheduleCreator(self.Airport,MaxNrOverlappingAircraft=MaxNrAircraft,ScheduleFolder="Schedules",AutoRun=False)
             self.Scheduler.Run(Visualize=True)
             self.Schedule  = self.Scheduler.Schedule
 
-        #--- Run ---
+        #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        # Run
+        #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        
         if AutoRun:
             self.Run()
-
     #================================================================================
     # Run Assignment
     #================================================================================
@@ -181,7 +190,14 @@ class GateAndBayAssignmentSolver(object):
         for i in range(len(self.Schedule)):
             a = self.Schedule[i]
             for k in range(len(self.Airport.Bays)):
-                ObjectiveFunction_TransportDistance+= "X_"+str(i)+"_"+str(k)+"*"+str(a.NrPassengers)+ "+"
+                b = self.Airport.Bays[k]
+                #--- Objective ---
+                Terminal = a.Airline.Terminal
+                GateName = b.Name
+                if not (Terminal,GateName) in self.Airport.WalkingDistances.keys():
+                    GateName = GateName.rstrip("ABCD LR")
+                WalkingDistance = self.Airport.WalkingDistances[(Terminal,GateName)]
+                ObjectiveFunction_TransportDistance+= "X_"+str(i)+"_"+str(k)+"*"+str(a.NrPassengers)+"*"+str(WalkingDistance)+ "+"
         ObjectiveFunction_TransportDistance+='0 == Z1'
 
         ObjectiveFunctions.append(ObjectiveFunction_TransportDistance)
@@ -325,7 +341,7 @@ class GateAndBayAssignmentSolver(object):
 
         t0 = getTime()
 
-        self.lp_problem = pulp.LpProblem("Gate&Bay Assignment Problem", pulp.LpMaximize)
+        self.lp_problem = pulp.LpProblem("Gate&Bay Assignment Problem", pulp.LpMinimize)
 
         with open(self.LP_filepath) as LP_File:
 
