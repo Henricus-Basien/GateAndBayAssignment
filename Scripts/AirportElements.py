@@ -37,8 +37,10 @@ class AirportElement(object):
 
 class Gate(AirportElement):
 	"""docstring for Gate"""
-	def __init__(self, Name="TestGate"):
+	def __init__(self, Name="TestGate",DestinationType=None):
 		super(Gate, self).__init__(Name)
+
+		DestinationType = DestinationType
 		
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Bay

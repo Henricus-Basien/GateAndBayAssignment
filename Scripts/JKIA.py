@@ -86,7 +86,7 @@ class JKIA(Airport):
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Aircraft Groups
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
+    
     def SetupAircraftGroups(self):
 
         self.AircraftGroups = OrderedDict()
@@ -105,43 +105,47 @@ class JKIA(Airport):
             AircraftTypes+=self.AircraftGroups[group]
         return AircraftTypes
 
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Gates
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
     def SetupGates(self):
 
         Gates = []
         
-        Gates.append(Gate(Name="D2A"))
-        Gates.append(Gate(Name="D2B"))
-        Gates.append(Gate(Name="D2C"))
-        Gates.append(Gate(Name="D3A"))
-        Gates.append(Gate(Name="D3B"))
-        Gates.append(Gate(Name="D3C"))
+        Gates.append(Gate(Name="D2A", DestinationType="Domestic"))
+        Gates.append(Gate(Name="D2B", DestinationType="Domestic"))
+        Gates.append(Gate(Name="D2C", DestinationType="Domestic"))
+        Gates.append(Gate(Name="D3A", DestinationType="Domestic"))
+        Gates.append(Gate(Name="D3B", DestinationType="Domestic"))
+        Gates.append(Gate(Name="D3C", DestinationType="Domestic"))
 
-        Gates.append(Gate(Name="C4L"))
-        Gates.append(Gate(Name="C4R"))
-        Gates.append(Gate(Name="C5" ))
-        Gates.append(Gate(Name="C6" ))
+        Gates.append(Gate(Name="C4L", DestinationType="Internal"))
+        Gates.append(Gate(Name="C4R", DestinationType="Internal"))
+        Gates.append(Gate(Name="C5" , DestinationType="Internal"))
+        Gates.append(Gate(Name="C6" , DestinationType="Internal"))
 
-        Gates.append(Gate(Name="B7" ))
-        Gates.append(Gate(Name="B8" ))
-        Gates.append(Gate(Name="B9" ))
-        Gates.append(Gate(Name="B10"))
-        Gates.append(Gate(Name="B11"))
+        Gates.append(Gate(Name="B7" , DestinationType="Internal"))
+        Gates.append(Gate(Name="B8" , DestinationType="Internal"))
+        Gates.append(Gate(Name="B9" , DestinationType="Internal"))
+        Gates.append(Gate(Name="B10", DestinationType="Internal"))
+        Gates.append(Gate(Name="B11", DestinationType="Internal"))
 
-        Gates.append(Gate(Name="A12"))
-        Gates.append(Gate(Name="A13"))
-        Gates.append(Gate(Name="A14"))
-        Gates.append(Gate(Name="A15"))
-        Gates.append(Gate(Name="A16"))
-        Gates.append(Gate(Name="A17"))
-        Gates.append(Gate(Name="A18"))
-        Gates.append(Gate(Name="A19"))
-        Gates.append(Gate(Name="A20"))
+        Gates.append(Gate(Name="A12", DestinationType="Internal"))
+        Gates.append(Gate(Name="A13", DestinationType="Internal"))
+        Gates.append(Gate(Name="A14", DestinationType="Internal"))
+        Gates.append(Gate(Name="A15", DestinationType="Internal"))
+        Gates.append(Gate(Name="A16", DestinationType="Internal"))
+        Gates.append(Gate(Name="A17", DestinationType="Internal"))
+        Gates.append(Gate(Name="A18", DestinationType="Internal"))
+        Gates.append(Gate(Name="A19", DestinationType="Internal"))
+        Gates.append(Gate(Name="A20", DestinationType="Internal"))
 
-
-        # for i in range(30):
-        #   Gates.append(Gate(Name="X"+str(i+1)))
-        print Gates
         return Gates
+
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Bays
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     def SetupBays(self):
 
@@ -199,9 +203,6 @@ class JKIA(Airport):
         Bays.append(Bay(Name="H9" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
         Bays.append(Bay(Name="H10",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
 
-        # Bays = []
-        # for i in range(30):
-        #   Bays.append(Bay(Name="X"+str(i+1)))
 
         return Bays
 
