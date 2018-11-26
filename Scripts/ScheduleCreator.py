@@ -60,7 +60,7 @@ class ScheduleCreator(object):
         if not os.path.exists(self.ScheduleFolder): os.makedirs(self.ScheduleFolder)
 
         if self.MaxNrAircraft is None:
-            AverageStayTime = 2.5 # [h]
+            AverageStayTime = 3.0#2.5 # [h]
             self.MaxNrAircraft = int((self.Airport.GetOperationalTime()/3600.)*self.MaxNrOverlappingAircraft/float(AverageStayTime))
 
         if AutoRun:
@@ -169,14 +169,20 @@ class ScheduleCreator(object):
             if np.random.uniform()<=0.75: NeedsFueling = True
             else:                         NeedsFueling = False 
 
+            #--- BayPreference ---
+            BayPreference = None
+            if np.random.uniform()<=0.1: 
+                BayPreference = np.random.choice(self.Airport.Bays).Name
+
             #----------------------------------------
             # Create Aircraft
             #----------------------------------------
             
             a = AircraftType(ID=ID, Arrival=Arrival,Departure=Departure,NrPassengers=NrPassengers)
-            a.Airline      = airline
-            a.Domestic     = Domestic
-            a.NeedsFueling = NeedsFueling
+            a.Airline       = airline
+            a.Domestic      = Domestic
+            a.NeedsFueling  = NeedsFueling
+            a.BayPreference = BayPreference
 
             self.Schedule.append(a)
 
@@ -216,6 +222,7 @@ class ScheduleCreator(object):
         ws.cell(row=1, column=6).value = "NrPassengers"
         ws.cell(row=1, column=7).value = "Domestic"
         ws.cell(row=1, column=8).value = "NeedsFueling"
+        ws.cell(row=1, column=9).value = "BayPreference"
 
         #----------------------------------------
         # Write Data
@@ -231,6 +238,7 @@ class ScheduleCreator(object):
             ws.cell(row=i+2, column=6).value = aircraft.NrPassengers
             ws.cell(row=i+2, column=7).value = aircraft.Domestic
             ws.cell(row=i+2, column=8).value = aircraft.NeedsFueling
+            ws.cell(row=i+2, column=9).value = aircraft.BayPreference
 
         wb.save(os.path.join(self.ScheduleFolder,"Airport '"+str(self.Airport.Name)+"' - Schedule.xlsx"))
 

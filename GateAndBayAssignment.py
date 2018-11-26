@@ -152,9 +152,13 @@ class GateAndBayAssignmentSolver(object):
         
         if not os.path.exists(self.LP_Path): os.makedirs(self.LP_Path)
         self.LP_filepath = os.path.join(self.LP_Path,self.Airport.Name+" - GateAndBayAssignment.PuLP")
+        NrLines = 0
         with open(self.LP_filepath,"w") as LP_File:
             for line in LP:
+                if line[0]!="#":NrLines+=1
                 LP_File.write(line+"\n")
+
+        print str(NrLines)+" Variables/ObjectiveFunctions/Constraints have been created!"
 
         dt = getTime()-t0
         print ">"*3+"Problem created       @"+str(Now())+"\t in "+str(round(dt,2))+"s"
@@ -226,8 +230,9 @@ class GateAndBayAssignmentSolver(object):
             for k in range(len(self.Airport.Bays)):
                 var = "X_"+str(i)+"_"+str(k)
                 if self.RemoveInfeasibleVariables and var in self.InFeasibleVariables: continue
-                if hasattr(a,"BayPreference") and a.BayPreference==k:
-                    ObjectiveFunction_AirlinePreference+= var+"*"+str(a.NrPassengers)+ "+"
+                b = self.Airport.Bays[k]
+                if hasattr(a,"BayPreference") and a.BayPreference is not None and a.BayPreference==b.Name:
+                    ObjectiveFunction_AirlinePreference+= var+ "+"
         ObjectiveFunction_AirlinePreference+='0 == Z2'
 
         ObjectiveFunctions.append(ObjectiveFunction_AirlinePreference)
@@ -260,7 +265,7 @@ class GateAndBayAssignmentSolver(object):
         alpha = 1.0
         beta  = Z1_Max
         gamma = Z1_Max+2*beta
-        ObjectiveFunctions.append(str(alpha)+'*Z1 + '+str(beta)+'*Z2 + '+str(gamma)+'*Z3 , "Z"')        
+        ObjectiveFunctions.append(str(alpha)+'*Z1 - '+str(beta)+'*Z2 + '+str(gamma)+'*Z3 , "Z"')        
 
         #..............................
         # Addendum
@@ -346,7 +351,7 @@ class GateAndBayAssignmentSolver(object):
             #--- Cycle all Bays ---
             for k in range(len(self.Airport.Bays)):
                 b = self.Airport.Bays[k]
-                if a.Type not in b.CompatibleAircraftTypes or (a.NeedsFueling and not b.FuelingPossible):
+                if (b.CompatibleAircraftTypes is not None and a.Type not in b.CompatibleAircraftTypes) or (a.NeedsFueling and not b.FuelingPossible):
                     BayCompatibilityConstraints.append("X_"+str(i)+"_"+str(k)+" == 0")
 
         #--- Extract Variables ---

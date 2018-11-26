@@ -43,6 +43,10 @@ class JKIA(Airport):
         Bays  = self.SetupBays()
 
         TravelDistances = self.ReadTravelDistancesMatrix(JoinPath("Inputs","JKIA-TravelDistances.xlsx"))
+        if hasattr(self,"VirtualBays"):
+            for bay in self.VirtualBays:
+                for terminal in self.Terminals:
+                    TravelDistances[(terminal,bay.Name)] = 10**9
 
         super(JKIA, self).__init__(Name="JKIA",T_Open=T_Open,T_Close=T_Close,Gates=Gates,Bays=Bays,TravelDistances=TravelDistances)
 
@@ -226,6 +230,15 @@ class JKIA(Airport):
         Bays.append(Bay(Name="H9" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
         Bays.append(Bay(Name="H10",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
 
+        #----------------------------------------
+        # Virtual/Infeasible Bays
+        #----------------------------------------
+        
+        if 1:
+            self.VirtualBays = []
+            for i in range(int(len(Bays)*0.1)):
+                self.VirtualBays.append(Bay(Name="X"+str(i+1),Color=[0]*3))
+            Bays+=self.VirtualBays
 
         return Bays
 
