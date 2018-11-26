@@ -117,7 +117,7 @@ class GateAndBayAssignmentSolver(object):
     def Run(self,Mode,PrintProblem=False):
 
         print "*"*100
-        print "Running LP Solver - "+self.Mode+"Assignment"
+        print "Running LP Solver - "+Mode+"Assignment"
         print "*"*100
 
         t0 = getTime()
