@@ -254,7 +254,9 @@ class ScheduleCreator(object):
         self.ShowAircraftGroundTime(  Show=False)
         self.ShowAircraftNrPassengers(Show=False)
 
-        if Show: plt.show()
+        if Show:
+            plt.show()
+            plt.close('all')
 
     def ShowAirportDayLines(self,MaxNrDays=None):
         if MaxNrDays is None: MaxNrDays = self.MaxNrDays

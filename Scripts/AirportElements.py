@@ -28,6 +28,7 @@ class AirportElement(object):
 		super(AirportElement, self).__init__()
 		self.Name  = Name
 		self.Color = Color
+		self.Virtual = False
 		
 	def __repr__(self):
 		return self.Name
@@ -63,15 +64,16 @@ class Bay(AirportElement):
 
 		self.CompatibleAircraftTypes = CompatibleAircraftTypes
 		self.FuelingPossible         = FuelingPossible
-		self.Virtual = False
 
 #****************************************************************************************************
 # Test Code
 #****************************************************************************************************
 
 if __name__=="__main__":
-	TestGate = Gate()
-	TestBay  = Bay()
+	TestTerminal = Terminal()
+	TestGate     = Gate()
+	TestBay      = Bay()
 
+	print TestTerminal
 	print TestGate
 	print TestBay

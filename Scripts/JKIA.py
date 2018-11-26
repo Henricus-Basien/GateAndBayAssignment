@@ -35,16 +35,17 @@ class JKIA(Airport):
     def __init__(self):
 
         T_Open  = "06:00"
-        T_Close = "23:59"#"18:00"#"12:00"#"23:59"
+        T_Close = "12:00"#"18:00"#"23:59"#"18:00"#"12:00"#"23:59"
         
         self.SetTerminals()
         self.SetupAircraftGroups()
         Gates = self.SetupGates()
         Bays  = self.SetupBays()
 
-        TravelDistances = self.ReadTravelDistancesMatrix(JoinPath("Inputs","JKIA-TravelDistances.xlsx"))
+        TravelDistances_Bays  = self.ReadTravelDistancesMatrix(JoinPath("Inputs","JKIA-TravelDistances_Bays.xlsx"))
+        TravelDistances_Gates = self.ReadTravelDistancesMatrix(JoinPath("Inputs","JKIA-TravelDistances_Bays.xlsx")) # ToDo Needs to be fixed!
 
-        super(JKIA, self).__init__(Name="JKIA",T_Open=T_Open,T_Close=T_Close,Gates=Gates,Bays=Bays,TravelDistances=TravelDistances)
+        super(JKIA, self).__init__(Name="JKIA",T_Open=T_Open,T_Close=T_Close,Gates=Gates,Bays=Bays,TravelDistances_Bays=TravelDistances_Bays,TravelDistances_Gates=TravelDistances_Gates)
 
         self.SetAirlines()
 
@@ -131,7 +132,7 @@ class JKIA(Airport):
         Gates.append(Gate(Name="A12",Color=self.Terminals["A"].Color, DestinationType="International"))
         Gates.append(Gate(Name="A13",Color=self.Terminals["A"].Color, DestinationType="International"))
         Gates.append(Gate(Name="A14",Color=self.Terminals["A"].Color, DestinationType="International"))
-        Gates.append(Gate(Name="A15",Color=self.Terminals["A"].Color, DestinationType="International"))
+        # Gates.append(Gate(Name="A15",Color=self.Terminals["A"].Color, DestinationType="International"))
         Gates.append(Gate(Name="A16",Color=self.Terminals["A"].Color, DestinationType="International"))
         Gates.append(Gate(Name="A17",Color=self.Terminals["A"].Color, DestinationType="International"))
         Gates.append(Gate(Name="A18",Color=self.Terminals["A"].Color, DestinationType="International"))
