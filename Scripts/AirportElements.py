@@ -24,12 +24,22 @@ Email: Henricus@Basien.de
 
 class AirportElement(object):
 	"""docstring for AirportElement"""
-	def __init__(self,Name="TestElements"):
+	def __init__(self,Name="TestElements",Color=None):
 		super(AirportElement, self).__init__()
-		self.Name = Name
+		self.Name  = Name
+		self.Color = Color
 		
 	def __repr__(self):
 		return self.Name
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# Terminal
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+class Terminal(AirportElement):
+	"""docstring for Terminal"""
+	def __init__(self, Name="TestTerminal",*args,**kwargs):
+		super(Terminal, self).__init__(Name = Name,*args,**kwargs)
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Gate
@@ -37,8 +47,8 @@ class AirportElement(object):
 
 class Gate(AirportElement):
 	"""docstring for Gate"""
-	def __init__(self, Name="TestGate",DestinationType=None):
-		super(Gate, self).__init__(Name)
+	def __init__(self, Name="TestGate",DestinationType=None,*args,**kwargs):
+		super(Gate, self).__init__(Name=Name,*args,**kwargs)
 
 		DestinationType = DestinationType
 		
@@ -48,8 +58,8 @@ class Gate(AirportElement):
 
 class Bay(AirportElement):
 	"""docstring for Bay"""
-	def __init__(self, Name="TestBay",CompatibleAircraftTypes=None,FuelingPossible=True):
-		super(Bay, self).__init__(Name)
+	def __init__(self, Name="TestBay",CompatibleAircraftTypes=None,FuelingPossible=True,*args,**kwargs):
+		super(Bay, self).__init__(Name=Name,*args,**kwargs)
 
 		self.CompatibleAircraftTypes = CompatibleAircraftTypes
 		self.FuelingPossible         = FuelingPossible

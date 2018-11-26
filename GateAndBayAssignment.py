@@ -80,6 +80,8 @@ class GateAndBayAssignmentSolver(object):
         else:
             self.LP_Path = os.path.split(self.LP_filepath)[0]
 
+        self.RemoveInfeasibleVariables = True
+
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         # Schedule
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -134,10 +136,13 @@ class GateAndBayAssignmentSolver(object):
 
         LP = []
 
+        self.InFeasibleVariables = self.GetLP_BayCompatibilityConstraints()
         #--- Variables & Objectives ---
         LP+=self.GetLP_Variables()
         LP+=self.GetLP_ObjectiveFunctions()
         #--- Constaints ---
+        if not self.RemoveInfeasibleVariables:
+            LP+=self.InFeasibleVariables
         LP+=self.GetLP_BayComplianceConstraints()
         LP+=self.GetLP_TimeConstraints()
 
@@ -164,7 +169,9 @@ class GateAndBayAssignmentSolver(object):
         
         for i in range(len(self.Schedule)):
             for k in range(len(self.Airport.Bays)):
-                self.Variables.append("X_"+str(i)+"_"+str(k))
+                var = "X_"+str(i)+"_"+str(k)
+                if self.RemoveInfeasibleVariables and var in self.InFeasibleVariables: continue
+                self.Variables.append(var)
         
         Variables = ["Var: "+v for v in self.Variables]
 
@@ -193,13 +200,15 @@ class GateAndBayAssignmentSolver(object):
             a = self.Schedule[i]
             for k in range(len(self.Airport.Bays)):
                 b = self.Airport.Bays[k]
+                var = "X_"+str(i)+"_"+str(k)
+                if self.RemoveInfeasibleVariables and var in self.InFeasibleVariables: continue
                 #--- Objective ---
                 Terminal = a.Airline.Terminal
                 GateName = b.Name
                 if not (Terminal,GateName) in self.Airport.TravelDistances.keys():
                     GateName = GateName.rstrip("ABCD LR")
                 TravelDistance = self.Airport.TravelDistances[(Terminal,GateName)]
-                ObjectiveFunction_TransportDistance+= "X_"+str(i)+"_"+str(k)+"*"+str(a.NrPassengers)+"*"+str(TravelDistance)+ "+"
+                ObjectiveFunction_TransportDistance+= var+"*"+str(a.NrPassengers)+"*"+str(TravelDistance)+ "+"
         ObjectiveFunction_TransportDistance+='0 == Z1'
 
         ObjectiveFunctions.append(ObjectiveFunction_TransportDistance)
@@ -215,8 +224,10 @@ class GateAndBayAssignmentSolver(object):
         for i in range(len(self.Schedule)):
             a = self.Schedule[i]
             for k in range(len(self.Airport.Bays)):
+                var = "X_"+str(i)+"_"+str(k)
+                if self.RemoveInfeasibleVariables and var in self.InFeasibleVariables: continue
                 if hasattr(a,"BayPreference") and a.BayPreference==k:
-                    ObjectiveFunction_AirlinePreference+= "X_"+str(i)+"_"+str(k)+"*"+str(a.NrPassengers)+ "+"
+                    ObjectiveFunction_AirlinePreference+= var+"*"+str(a.NrPassengers)+ "+"
         ObjectiveFunction_AirlinePreference+='0 == Z2'
 
         ObjectiveFunctions.append(ObjectiveFunction_AirlinePreference)
@@ -276,7 +287,9 @@ class GateAndBayAssignmentSolver(object):
         for i in range(len(self.Schedule)):
             BayComplianceConstraint = ""
             for k in range(len(self.Airport.Bays)):
-                BayComplianceConstraint+="X_"+str(i)+"_"+str(k) + " + "
+                var = "X_"+str(i)+"_"+str(k)
+                if self.RemoveInfeasibleVariables and var in self.InFeasibleVariables: continue
+                BayComplianceConstraint+=var + " + "
             BayComplianceConstraint+=" 0 == 1"
             BayComplianceConstraints.append(BayComplianceConstraint)
 
@@ -301,7 +314,10 @@ class GateAndBayAssignmentSolver(object):
                 if not self.ScheduleClash(a1,a2): continue
                 #--- Cycle all Bays ---
                 for k in range(len(self.Airport.Bays)):
-                    TimeConstraints.append("X_"+str(i)+"_"+str(k) + " + " + "X_"+str(j)+"_"+str(k) + " <= 1")
+                    var1 = "X_"+str(i)+"_"+str(k)
+                    var2 = "X_"+str(j)+"_"+str(k)
+                    if self.RemoveInfeasibleVariables and (var1 in self.InFeasibleVariables or var2 in self.InFeasibleVariables): continue
+                    TimeConstraints.append(var1 + " + " + var2 + " <= 1")
 
         return TimeConstraints
 
@@ -329,9 +345,22 @@ class GateAndBayAssignmentSolver(object):
             a = self.Schedule[i]
             #--- Cycle all Bays ---
             for k in range(len(self.Airport.Bays)):
-                b = self.Airport.Bays[i]
+                b = self.Airport.Bays[k]
                 if a.Type not in b.CompatibleAircraftTypes or (a.NeedsFueling and not b.FuelingPossible):
                     BayCompatibilityConstraints.append("X_"+str(i)+"_"+str(k)+" == 0")
+
+        #--- Extract Variables ---
+        if self.RemoveInfeasibleVariables:
+            for i in range(len(BayCompatibilityConstraints))[::-1]:
+                c = BayCompatibilityConstraints[i]
+                if c[0]=="#": del BayCompatibilityConstraints[i]
+                else: BayCompatibilityConstraints[i] = c.split(" ")[0]
+
+            if 1:
+                TotalNrVariables = len(self.Schedule)*len(self.Airport.Bays)
+                InFeasiblePer = len(BayCompatibilityConstraints)/float(TotalNrVariables)
+                #print BayCompatibilityConstraints
+                print ">"*3+str(len(BayCompatibilityConstraints))+"/"+str(TotalNrVariables)+" ("+str(round(InFeasiblePer*100,1))+r"%) InFeasibleVariables Found!"
 
         return BayCompatibilityConstraints
 
@@ -448,8 +477,9 @@ class GateAndBayAssignmentSolver(object):
 
         #--- Print ---
         if PrintResult:
+            print "FlightID | BayID"
             for key in self.BayAssignment.keys():
-                print key,self.BayAssignment[key]
+                print key,"\t|",self.BayAssignment[key]
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Plot Result
@@ -482,11 +512,11 @@ class GateAndBayAssignmentSolver(object):
             K = str(k)
             if not K in self.BayAssignment_Dual.keys(): continue
             for aircraft in self.BayAssignment_Dual[K]:
-                # color = None
+                color = Bay.Color #None
                 t_a = (aircraft.Arrival  -MinDate).total_seconds()/3600.
                 t_d = (aircraft.Departure-MinDate).total_seconds()/3600.
                 dt = t_d-t_a
-                ax.broken_barh([(t_a,dt)], (k-0.4,0.8))
+                ax.broken_barh([(t_a,dt)], (k-0.4,0.8),color=color)
 
                 if 1:
                     ax.annotate(aircraft.Type+" - ID: "+aircraft.ID+"\n"+"> #P: "+str(aircraft.NrPassengers), (t_a,k),

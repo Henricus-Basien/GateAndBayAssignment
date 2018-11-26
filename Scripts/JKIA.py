@@ -23,7 +23,7 @@ from os.path import join as JoinPath
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 from Airport         import Airport
-from AirportElements import Gate,Bay
+from AirportElements import Terminal,Gate,Bay
 from Airlines        import AllAirlines
 
 #****************************************************************************************************
@@ -36,6 +36,8 @@ class JKIA(Airport):
 
         T_Open  = "06:00"
         T_Close = "23:59"
+        
+        self.SetTerminals()
         self.SetupAircraftGroups()
         Gates = self.SetupGates()
         Bays  = self.SetupBays()
@@ -45,6 +47,19 @@ class JKIA(Airport):
         super(JKIA, self).__init__(Name="JKIA",T_Open=T_Open,T_Close=T_Close,Gates=Gates,Bays=Bays,TravelDistances=TravelDistances)
 
         self.SetAirlines()
+
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Terminals
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    
+    def SetTerminals(self):
+
+        self.Terminals = OrderedDict()
+
+        self.Terminals["A"] = Terminal(Name="A",Color=[0.0,0.0,1.0])
+        self.Terminals["B"] = Terminal(Name="B",Color=[1.0,0.8,0.0])
+        self.Terminals["C"] = Terminal(Name="C",Color=[0.8,1.0,0.0])
+        self.Terminals["D"] = Terminal(Name="D",Color=[0.0,1.0,0.0])
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Airlines
@@ -113,33 +128,33 @@ class JKIA(Airport):
 
         Gates = []
         
-        Gates.append(Gate(Name="D2A", DestinationType="Domestic"))
-        Gates.append(Gate(Name="D2B", DestinationType="Domestic"))
-        Gates.append(Gate(Name="D2C", DestinationType="Domestic"))
-        Gates.append(Gate(Name="D3A", DestinationType="Domestic"))
-        Gates.append(Gate(Name="D3B", DestinationType="Domestic"))
-        Gates.append(Gate(Name="D3C", DestinationType="Domestic"))
+        Gates.append(Gate(Name="A12",Color=self.Terminals["A"].Color, DestinationType="International"))
+        Gates.append(Gate(Name="A13",Color=self.Terminals["A"].Color, DestinationType="International"))
+        Gates.append(Gate(Name="A14",Color=self.Terminals["A"].Color, DestinationType="International"))
+        Gates.append(Gate(Name="A15",Color=self.Terminals["A"].Color, DestinationType="International"))
+        Gates.append(Gate(Name="A16",Color=self.Terminals["A"].Color, DestinationType="International"))
+        Gates.append(Gate(Name="A17",Color=self.Terminals["A"].Color, DestinationType="International"))
+        Gates.append(Gate(Name="A18",Color=self.Terminals["A"].Color, DestinationType="International"))
+        Gates.append(Gate(Name="A19",Color=self.Terminals["A"].Color, DestinationType="International"))
+        Gates.append(Gate(Name="A20",Color=self.Terminals["A"].Color, DestinationType="International"))
 
-        Gates.append(Gate(Name="C4L", DestinationType="Internal"))
-        Gates.append(Gate(Name="C4R", DestinationType="Internal"))
-        Gates.append(Gate(Name="C5" , DestinationType="Internal"))
-        Gates.append(Gate(Name="C6" , DestinationType="Internal"))
+        Gates.append(Gate(Name="B7" ,Color=self.Terminals["B"].Color, DestinationType="Mixed"))
+        Gates.append(Gate(Name="B8" ,Color=self.Terminals["B"].Color, DestinationType="Mixed"))
+        Gates.append(Gate(Name="B9" ,Color=self.Terminals["B"].Color, DestinationType="Mixed"))
+        Gates.append(Gate(Name="B10",Color=self.Terminals["B"].Color, DestinationType="Mixed"))
+        Gates.append(Gate(Name="B11",Color=self.Terminals["B"].Color, DestinationType="Mixed"))
 
-        Gates.append(Gate(Name="B7" , DestinationType="Internal"))
-        Gates.append(Gate(Name="B8" , DestinationType="Internal"))
-        Gates.append(Gate(Name="B9" , DestinationType="Internal"))
-        Gates.append(Gate(Name="B10", DestinationType="Internal"))
-        Gates.append(Gate(Name="B11", DestinationType="Internal"))
+        Gates.append(Gate(Name="C4L",Color=self.Terminals["C"].Color, DestinationType="Mixed"))
+        Gates.append(Gate(Name="C4R",Color=self.Terminals["C"].Color, DestinationType="Mixed"))
+        Gates.append(Gate(Name="C5" ,Color=self.Terminals["C"].Color, DestinationType="Mixed"))
+        Gates.append(Gate(Name="C6" ,Color=self.Terminals["C"].Color, DestinationType="Mixed"))
 
-        Gates.append(Gate(Name="A12", DestinationType="Internal"))
-        Gates.append(Gate(Name="A13", DestinationType="Internal"))
-        Gates.append(Gate(Name="A14", DestinationType="Internal"))
-        Gates.append(Gate(Name="A15", DestinationType="Internal"))
-        Gates.append(Gate(Name="A16", DestinationType="Internal"))
-        Gates.append(Gate(Name="A17", DestinationType="Internal"))
-        Gates.append(Gate(Name="A18", DestinationType="Internal"))
-        Gates.append(Gate(Name="A19", DestinationType="Internal"))
-        Gates.append(Gate(Name="A20", DestinationType="Internal"))
+        Gates.append(Gate(Name="D2A",Color=self.Terminals["D"].Color, DestinationType="Domestic"))
+        Gates.append(Gate(Name="D2B",Color=self.Terminals["D"].Color, DestinationType="Domestic"))
+        Gates.append(Gate(Name="D2C",Color=self.Terminals["D"].Color, DestinationType="Domestic"))
+        Gates.append(Gate(Name="D3A",Color=self.Terminals["D"].Color, DestinationType="Domestic"))
+        Gates.append(Gate(Name="D3B",Color=self.Terminals["D"].Color, DestinationType="Domestic"))
+        Gates.append(Gate(Name="D3C",Color=self.Terminals["D"].Color, DestinationType="Domestic"))       
 
         return Gates
 
@@ -151,32 +166,40 @@ class JKIA(Airport):
 
         Bays = []
 
-        Bays.append(Bay(Name="D2A",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B"])))
-        Bays.append(Bay(Name="D2B",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C"])))
-        Bays.append(Bay(Name="D2C",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
-        Bays.append(Bay(Name="D3A",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B"])))
-        Bays.append(Bay(Name="D3B",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C"])))
-        Bays.append(Bay(Name="D3C",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
+        #----------------------------------------
+        # Terminal Bays
+        #----------------------------------------
+
+        Bays.append(Bay(Name="A12",Color=self.Terminals["A"].Color,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E"])))
+        Bays.append(Bay(Name="A13",Color=self.Terminals["A"].Color,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E"])))
+        Bays.append(Bay(Name="A14",Color=self.Terminals["A"].Color,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E"])))
+        Bays.append(Bay(Name="A16",Color=self.Terminals["A"].Color,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E"])))
+        Bays.append(Bay(Name="A17",Color=self.Terminals["A"].Color,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G"])))
+        Bays.append(Bay(Name="A18",Color=self.Terminals["A"].Color,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
+        Bays.append(Bay(Name="A19",Color=self.Terminals["A"].Color,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
+        Bays.append(Bay(Name="A20",Color=self.Terminals["A"].Color,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E"])))
+
+        Bays.append(Bay(Name="B7" ,Color=self.Terminals["B"].Color,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
+        Bays.append(Bay(Name="B8" ,Color=self.Terminals["B"].Color,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
+        Bays.append(Bay(Name="B9" ,Color=self.Terminals["B"].Color,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
+        Bays.append(Bay(Name="B10",Color=self.Terminals["B"].Color,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
+        Bays.append(Bay(Name="B11",Color=self.Terminals["B"].Color,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
+
+        Bays.append(Bay(Name="C4L",Color=self.Terminals["C"].Color,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G"])))
+        Bays.append(Bay(Name="C4R",Color=self.Terminals["C"].Color,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E"])))
+        Bays.append(Bay(Name="C5" ,Color=self.Terminals["C"].Color,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
+        Bays.append(Bay(Name="C6" ,Color=self.Terminals["C"].Color,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
+
+        Bays.append(Bay(Name="D2A",Color=self.Terminals["D"].Color,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B"])))
+        Bays.append(Bay(Name="D2B",Color=self.Terminals["D"].Color,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C"])))
+        Bays.append(Bay(Name="D2C",Color=self.Terminals["D"].Color,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
+        Bays.append(Bay(Name="D3A",Color=self.Terminals["D"].Color,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B"])))
+        Bays.append(Bay(Name="D3B",Color=self.Terminals["D"].Color,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C"])))
+        Bays.append(Bay(Name="D3C",Color=self.Terminals["D"].Color,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))
         
-        Bays.append(Bay(Name="C4L",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G"])))
-        Bays.append(Bay(Name="C4R",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E"])))
-        Bays.append(Bay(Name="C5" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
-        Bays.append(Bay(Name="C6" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
-        
-        Bays.append(Bay(Name="B7" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
-        Bays.append(Bay(Name="B8" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
-        Bays.append(Bay(Name="B9" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
-        Bays.append(Bay(Name="B10",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
-        Bays.append(Bay(Name="B11",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
-        
-        Bays.append(Bay(Name="A12",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E"])))
-        Bays.append(Bay(Name="A13",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E"])))
-        Bays.append(Bay(Name="A14",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E"])))
-        Bays.append(Bay(Name="A16",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E"])))
-        Bays.append(Bay(Name="A17",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G"])))
-        Bays.append(Bay(Name="A18",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
-        Bays.append(Bay(Name="A19",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E","F","G","H"])))
-        Bays.append(Bay(Name="A20",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["B","C","D","E"])))
+        #----------------------------------------
+        # External Bays
+        #----------------------------------------
         
         Bays.append(Bay(Name="J1" ,CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E","F","G","H"])))
         Bays.append(Bay(Name="J2A",CompatibleAircraftTypes=self.GetAircraftTypesByGroup(["A","B","C","D","E"])))

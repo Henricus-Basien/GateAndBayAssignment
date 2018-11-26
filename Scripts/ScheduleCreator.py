@@ -106,6 +106,8 @@ class ScheduleCreator(object):
             AircraftType = np.random.choice(airline.AircraftTypes)
             ID = i+1
 
+            ID = airline.Name+str(ID)
+
             #----------------------------------------
             # Arrival/Departure
             #----------------------------------------
