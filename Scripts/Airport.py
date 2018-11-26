@@ -33,7 +33,7 @@ class Airport(object):
 	# Initialization
 	#================================================================================
 	
-	def __init__(self,Name="TestAirport",T_Open="08:00",T_Close="22:00", Gates=[],Bays=[],WalkingDistances={},Airlines=None):
+	def __init__(self,Name="TestAirport",T_Open="08:00",T_Close="22:00", Gates=[],Bays=[],TravelDistances={},Airlines=None):
 		super(Airport, self).__init__()
 		self.Name = Name
 		self.T_Open  = T_Open
@@ -43,7 +43,7 @@ class Airport(object):
 
 		self.Gates = Gates
 		self.Bays  = Bays
-		self.WalkingDistances = WalkingDistances
+		self.TravelDistances = TravelDistances
 		if Airlines is None:
 			Airlines = AllAirlines
 		self.Airlines = Airlines
@@ -55,32 +55,32 @@ class Airport(object):
 	def GetOperationalTime(self):
 		return (self.T_Close-self.T_Open).total_seconds()
 
-	def ReadWalkingDistancesMatrix(self,filepath):
+	def ReadTravelDistancesMatrix(self,filepath):
 
 		wb = load_workbook(filepath)
 		print wb
-		WalkingDistances = dict()
+		TravelDistances = dict()
 
-		WalkingDistancesloadedExcel = load_workbook(filepath)
-		WalkingDistancesWorksheet = WalkingDistancesloadedExcel.active
-		for WalkingDistanceRow in WalkingDistancesWorksheet.values:
-			if WalkingDistanceRow[0] in ["Terminal"]:
+		TravelDistancesloadedExcel = load_workbook(filepath)
+		TravelDistancesWorksheet = TravelDistancesloadedExcel.active
+		for TravelDistanceRow in TravelDistancesWorksheet.values:
+			if TravelDistanceRow[0] in ["Terminal"]:
 				Terminals = []
-				for terminals_readout in range(len(WalkingDistanceRow)-1):
+				for terminals_readout in range(len(TravelDistanceRow)-1):
 					terminals_readout += 1
-					Terminals.append(str(WalkingDistanceRow[terminals_readout]))
-			if WalkingDistanceRow[0] not in ["Terminal","Bay"]:
-				if WalkingDistanceRow[0] != None:
-					WalkingDistanceGate = str(WalkingDistanceRow[0])
+					Terminals.append(str(TravelDistanceRow[terminals_readout]))
+			if TravelDistanceRow[0] not in ["Terminal","Bay"]:
+				if TravelDistanceRow[0] != None:
+					TravelDistanceGate = str(TravelDistanceRow[0])
 					t_counter = 0
-					for Distance in WalkingDistanceRow:
-						if Distance == WalkingDistanceGate:
+					for Distance in TravelDistanceRow:
+						if Distance == TravelDistanceGate:
 							print Distance
 						else:
-							WalkingDistances[(Terminals[t_counter],WalkingDistanceGate)] = int(Distance)
+							TravelDistances[(Terminals[t_counter],TravelDistanceGate)] = int(Distance)
 							t_counter += 1
 
-		return WalkingDistances
+		return TravelDistances
 
 	#================================================================================
 	# Info
@@ -99,7 +99,7 @@ class Airport(object):
 
 		InfoText+=" "*3+"Gates: "+str(self.Gates)+"\n"
 		InfoText+=" "*3+"Bays:  "+str(self.Bays) +"\n"
-		InfoText+=" "*3+"WalkingDistances:  "+str(self.WalkingDistances) +"\n"
+		InfoText+=" "*3+"TravelDistances:  "+str(self.TravelDistances) +"\n"
 		return InfoText	
 
 	def __repr__(self):

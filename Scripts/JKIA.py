@@ -40,9 +40,9 @@ class JKIA(Airport):
         Gates = self.SetupGates()
         Bays  = self.SetupBays()
 
-        WalkingDistances = self.ReadWalkingDistancesMatrix(JoinPath("Inputs","WalkingDistances.xlsx"))
+        TravelDistances = self.ReadTravelDistancesMatrix(JoinPath("Inputs","JKIA-TravelDistances.xlsx"))
 
-        super(JKIA, self).__init__(Name="JKIA",T_Open=T_Open,T_Close=T_Close,Gates=Gates,Bays=Bays,WalkingDistances=WalkingDistances)
+        super(JKIA, self).__init__(Name="JKIA",T_Open=T_Open,T_Close=T_Close,Gates=Gates,Bays=Bays,TravelDistances=TravelDistances)
 
         self.SetAirlines()
 

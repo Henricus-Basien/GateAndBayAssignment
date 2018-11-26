@@ -194,10 +194,10 @@ class GateAndBayAssignmentSolver(object):
                 #--- Objective ---
                 Terminal = a.Airline.Terminal
                 GateName = b.Name
-                if not (Terminal,GateName) in self.Airport.WalkingDistances.keys():
+                if not (Terminal,GateName) in self.Airport.TravelDistances.keys():
                     GateName = GateName.rstrip("ABCD LR")
-                WalkingDistance = self.Airport.WalkingDistances[(Terminal,GateName)]
-                ObjectiveFunction_TransportDistance+= "X_"+str(i)+"_"+str(k)+"*"+str(a.NrPassengers)+"*"+str(WalkingDistance)+ "+"
+                TravelDistance = self.Airport.TravelDistances[(Terminal,GateName)]
+                ObjectiveFunction_TransportDistance+= "X_"+str(i)+"_"+str(k)+"*"+str(a.NrPassengers)+"*"+str(TravelDistance)+ "+"
         ObjectiveFunction_TransportDistance+='0 == Z1'
 
         ObjectiveFunctions.append(ObjectiveFunction_TransportDistance)

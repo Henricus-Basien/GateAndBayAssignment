@@ -37,8 +37,9 @@ Thumbs.db
 #    Output Files    #
 ######################
 
-*.xlsx
 *.png
+*.xlsx
+!Inputs/*.xlsx
 
 ######################
 #     Pulp Files     #
