@@ -57,8 +57,6 @@ class Airport(object):
 
 	def ReadTravelDistancesMatrix(self,filepath):
 
-		wb = load_workbook(filepath)
-		print wb
 		TravelDistances = dict()
 
 		TravelDistancesloadedExcel = load_workbook(filepath)
@@ -75,7 +73,7 @@ class Airport(object):
 					t_counter = 0
 					for Distance in TravelDistanceRow:
 						if Distance == TravelDistanceGate:
-							print Distance
+							pass #print Distance
 						else:
 							TravelDistances[(Terminals[t_counter],TravelDistanceGate)] = int(Distance)
 							t_counter += 1
@@ -97,8 +95,8 @@ class Airport(object):
 		InfoText+=" "*3+"T_Open:  "+str(self.T_Open.time()) +"\n"
 		InfoText+=" "*3+"T_Close: "+str(self.T_Close.time())+"\n"
 
-		InfoText+=" "*3+"Gates: "+str(self.Gates)+"\n"
-		InfoText+=" "*3+"Bays:  "+str(self.Bays) +"\n"
+		InfoText+=" "*3+"Gates: ("+str(len(self.Gates))+") "+str(self.Gates)+"\n"
+		InfoText+=" "*3+"Bays:  ("+str(len(self.Bays)) +") "+str(self.Bays) +"\n"
 		InfoText+=" "*3+"TravelDistances:  "+str(self.TravelDistances) +"\n"
 		return InfoText	
 

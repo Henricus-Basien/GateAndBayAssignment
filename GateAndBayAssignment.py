@@ -39,6 +39,8 @@ from collections import OrderedDict
 
 import pulp
 
+from datetime import datetime
+Now = datetime.now
 from time import time as getTime
 import numpy as np
 
@@ -117,7 +119,7 @@ class GateAndBayAssignmentSolver(object):
 
         dt = getTime()-t0
         print "+"*50
-        print "Complete Problem solved in "+str(round(dt/60.,1))+" min"
+        print "Complete Problem solved @"+str(Now())+"\t in "+str(round(dt/60.,1))+" min"
         print "+"*50
 
         self.PlotResult()
@@ -150,7 +152,7 @@ class GateAndBayAssignmentSolver(object):
                 LP_File.write(line+"\n")
 
         dt = getTime()-t0
-        print ">"*3+"Problem created       in "+str(round(dt,2))+"s"
+        print ">"*3+"Problem created       @"+str(Now())+"\t in "+str(round(dt,2))+"s"
 
     #----------------------------------------
     # Variables
@@ -292,7 +294,7 @@ class GateAndBayAssignmentSolver(object):
 
         for i in range(len(self.Schedule)):
             a1 = self.Schedule[i]
-            for j in range(len(self.Schedule)):
+            for j in range(i,len(self.Schedule)):
                 a2 = self.Schedule[j]
                 #--- Avoid unrequired Constraints ---
                 if i==j: continue
@@ -363,7 +365,7 @@ class GateAndBayAssignmentSolver(object):
                 exec("self.lp_problem+="+line)
 
         dt = getTime()-t0
-        print ">"*3+"Problem reconstructed in "+str(round(dt,2))+"s"
+        print ">"*3+"Problem reconstructed @"+str(Now())+"\t in "+str(round(dt,2))+"s"
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Run 
@@ -376,7 +378,7 @@ class GateAndBayAssignmentSolver(object):
         self.lp_problem.solve()
 
         dt = getTime()-t0
-        print ">"*3+"Problem solved        in "+str(round(dt,2))+"s"
+        print ">"*3+"Problem solved        @"+str(Now())+"\t in "+str(round(dt,2))+"s"
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Print

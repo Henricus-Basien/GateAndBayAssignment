@@ -17,8 +17,10 @@ Email: Henricus@Basien.de
 import os
 import openpyxl
 import datetime
+Now = datetime.datetime.now
 # from collections import OrderedDict
 import numpy as np
+from time import time as getTime
 
 import matplotlib.pyplot as plt
 
@@ -58,7 +60,8 @@ class ScheduleCreator(object):
         if not os.path.exists(self.ScheduleFolder): os.makedirs(self.ScheduleFolder)
 
         if self.MaxNrAircraft is None:
-            self.MaxNrAircraft = int((self.Airport.GetOperationalTime()/3600.)*self.MaxNrOverlappingAircraft*0.2)
+            AverageStayTime = 2.5 # [h]
+            self.MaxNrAircraft = int((self.Airport.GetOperationalTime()/3600.)*self.MaxNrOverlappingAircraft/float(AverageStayTime))
 
         if AutoRun:
             self.Run()
@@ -67,12 +70,19 @@ class ScheduleCreator(object):
     # Schedule Creator
     #================================================================================
 
-    def Run(self,Print=True,Export=True,Visualize=True):
+    def Run(self,Print=False,Export=True,Visualize=True):
+
+        t0 = getTime()
 
         self.CreateAircraftSchedule()
         if Print:     self.PrintSchedule()
         if Export:    self.ExportScheduleToExcel()
         if Visualize: self.Visualize()
+
+        dt = getTime()-t0
+        print "="*80
+        print "Created Schedule ("+str(len(self.Schedule))+"-Aircraft) @"+str(Now())+"\t in "+str(round(dt,1))+"s"
+        print "="*80
 
     def CreateAircraftSchedule(self,TimeRange=[45*60,20*3600],MinTimeStep=5*60,MaxNrDays=2,Sort=True,RefDate=ReferenceDate,NightStayMandatory=True):
 

@@ -1,0 +1,1 @@
+Please first Run the "Installer/Installer.bat" script, and secondly just run the "GateAndBayAssignment" Shortcut and enjoy!
