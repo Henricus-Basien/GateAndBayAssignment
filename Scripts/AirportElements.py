@@ -63,6 +63,7 @@ class Bay(AirportElement):
 
 		self.CompatibleAircraftTypes = CompatibleAircraftTypes
 		self.FuelingPossible         = FuelingPossible
+		self.Virtual = False
 
 #****************************************************************************************************
 # Test Code

@@ -13,8 +13,8 @@ Email: Henricus@Basien.de
 """
 Objectives:
     (V) Walking Distances
+    (V) Bay Preference
     ( ) Towing
-    ( ) Penalty
 Constraints:
     (V) Bay Compliance
     (V) Bay Compatibility / Fueling
@@ -120,9 +120,9 @@ class GateAndBayAssignmentSolver(object):
         self.ConvertResult()
 
         dt = getTime()-t0
-        print "+"*50
+        print "="*80
         print "Complete Problem solved @"+str(Now())+"\t in "+str(round(dt/60.,1))+" min"
-        print "+"*50
+        print "="*80
 
         self.PlotResult()
 
@@ -207,13 +207,16 @@ class GateAndBayAssignmentSolver(object):
                 var = "X_"+str(i)+"_"+str(k)
                 if self.RemoveInfeasibleVariables and var in self.InFeasibleVariables: continue
                 #--- Objective ---
-                Terminal = a.Airline.Terminal
-                GateName = b.Name
-                if not (Terminal,GateName) in self.Airport.TravelDistances.keys():
-                    GateName = GateName.rstrip("ABCD LR")
-                TravelDistance = self.Airport.TravelDistances[(Terminal,GateName)]
+                if b.Virtual:
+                    TravelDistance = 10**6
+                else:
+                    Terminal = a.Airline.Terminal
+                    GateName = b.Name
+                    if not (Terminal,GateName) in self.Airport.TravelDistances.keys():
+                        GateName = GateName.rstrip("ABCD LR")
+                    TravelDistance = self.Airport.TravelDistances[(Terminal,GateName)]
                 ObjectiveFunction_TransportDistance+= var+"*"+str(a.NrPassengers)+"*"+str(TravelDistance)+ "+"
-        ObjectiveFunction_TransportDistance+='0 == Z1'
+        ObjectiveFunction_TransportDistance+=' - Z1 == 0'#'0 == Z1'
 
         ObjectiveFunctions.append(ObjectiveFunction_TransportDistance)
 
@@ -233,7 +236,7 @@ class GateAndBayAssignmentSolver(object):
                 b = self.Airport.Bays[k]
                 if hasattr(a,"BayPreference") and a.BayPreference is not None and a.BayPreference==b.Name:
                     ObjectiveFunction_AirlinePreference+= var+ "+"
-        ObjectiveFunction_AirlinePreference+='0 == Z2'
+        ObjectiveFunction_AirlinePreference+=' - Z2 == 0'#'0 == Z2'
 
         ObjectiveFunctions.append(ObjectiveFunction_AirlinePreference)
 
@@ -250,7 +253,7 @@ class GateAndBayAssignmentSolver(object):
         #   for k in range(len(self.Airport.Bays)):
         #       if hasattr(a,"BayPreference") and a.BayPreference==k:
         #           ObjectiveFunction_RelocationPenalty+= "X_"+str(i)+"_"+str(k)+"*"+str(a.NrPassengers)+ "+"
-        ObjectiveFunction_RelocationPenalty+='0 == Z3'
+        ObjectiveFunction_RelocationPenalty+=' - Z3 == 0'#'0 == Z3'
 
         ObjectiveFunctions.append(ObjectiveFunction_RelocationPenalty)
 
@@ -260,7 +263,7 @@ class GateAndBayAssignmentSolver(object):
         
         ObjectiveFunctions.append("# ObjectiveFunction - Combined")
 
-        Z1_Max = 1 # ToDo
+        Z1_Max = np.max([a.NrPassengers for a in self.Schedule])*np.max(self.Airport.TravelDistances.values()) #1
 
         alpha = 1.0
         beta  = Z1_Max
@@ -295,6 +298,8 @@ class GateAndBayAssignmentSolver(object):
                 var = "X_"+str(i)+"_"+str(k)
                 if self.RemoveInfeasibleVariables and var in self.InFeasibleVariables: continue
                 BayComplianceConstraint+=var + " + "
+            if BayComplianceConstraint=="": continue # Avoids Empty Constraints
+
             BayComplianceConstraint+=" 0 == 1"
             BayComplianceConstraints.append(BayComplianceConstraint)
 
@@ -382,10 +387,14 @@ class GateAndBayAssignmentSolver(object):
         with open(self.LP_filepath) as LP_File:
 
             lines = LP_File.readlines()
+            LineNr = 0
             for line in lines:
+                LineNr+=1
                 line = line.strip()
                 if line=="" or line[0]=="#": continue
 
+                # print "Adding: ",LineNr#,line
+                # sys.stdout.write(str(LineNr)+",")
                 #--- Add Variables ---
                 if line[:4]=="Var:":
                     var = line[5:]

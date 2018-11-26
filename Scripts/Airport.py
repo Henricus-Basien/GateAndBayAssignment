@@ -22,91 +22,123 @@ from Airlines import AllAirlines
 # Internal
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+from AirportElements import Bay
+
 #****************************************************************************************************
 # Airport
 #****************************************************************************************************
 
 class Airport(object):
-	"""docstring for Airport"""
+    """docstring for Airport"""
 
-	#================================================================================
-	# Initialization
-	#================================================================================
-	
-	def __init__(self,Name="TestAirport",T_Open="08:00",T_Close="22:00", Gates=[],Bays=[],TravelDistances={},Airlines=None):
-		super(Airport, self).__init__()
-		self.Name = Name
-		self.T_Open  = T_Open
-		self.T_Close = T_Close
-		if type(self.T_Open)==str:  self.T_Open  = datetime.strptime(self.T_Open,  '%H:%M')
-		if type(self.T_Close)==str: self.T_Close = datetime.strptime(self.T_Close, '%H:%M')
+    #================================================================================
+    # Initialization
+    #================================================================================
+    
+    def __init__(self,Name="TestAirport",T_Open="08:00",T_Close="22:00", Gates=[],Bays=[],TravelDistances={},Airlines=None,AddVirtualBays=True):
+        super(Airport, self).__init__()
+        self.Name = Name
+        self.T_Open  = T_Open
+        self.T_Close = T_Close
+        if type(self.T_Open)==str:  self.T_Open  = datetime.strptime(self.T_Open,  '%H:%M')
+        if type(self.T_Close)==str: self.T_Close = datetime.strptime(self.T_Close, '%H:%M')
 
-		self.Gates = Gates
-		self.Bays  = Bays
-		self.TravelDistances = TravelDistances
-		if Airlines is None:
-			Airlines = AllAirlines
-		self.Airlines = Airlines
+        self.Gates = Gates
+        self.Bays  = Bays
+        self.TravelDistances = TravelDistances
+        if Airlines is None:
+            Airlines = AllAirlines
+        self.Airlines = Airlines
 
-	#================================================================================
-	# Evaluation
-	#================================================================================
-	
-	def GetOperationalTime(self):
-		return (self.T_Close-self.T_Open).total_seconds()
+        if AddVirtualBays:
+            self.CreateVirtualBays()
 
-	def ReadTravelDistancesMatrix(self,filepath):
+    #================================================================================
+    # Evaluation
+    #================================================================================
+    
+    def GetOperationalTime(self):
+        return (self.T_Close-self.T_Open).total_seconds()
 
-		TravelDistances = dict()
+    def ReadTravelDistancesMatrix(self,filepath):
 
-		TravelDistancesloadedExcel = load_workbook(filepath)
-		TravelDistancesWorksheet = TravelDistancesloadedExcel.active
-		for TravelDistanceRow in TravelDistancesWorksheet.values:
-			if TravelDistanceRow[0] in ["Terminal"]:
-				Terminals = []
-				for terminals_readout in range(len(TravelDistanceRow)-1):
-					terminals_readout += 1
-					Terminals.append(str(TravelDistanceRow[terminals_readout]))
-			if TravelDistanceRow[0] not in ["Terminal","Bay"]:
-				if TravelDistanceRow[0] != None:
-					TravelDistanceGate = str(TravelDistanceRow[0])
-					t_counter = 0
-					for Distance in TravelDistanceRow:
-						if Distance == TravelDistanceGate:
-							pass #print Distance
-						else:
-							TravelDistances[(Terminals[t_counter],TravelDistanceGate)] = int(Distance)
-							t_counter += 1
+        TravelDistances = dict()
 
-		return TravelDistances
+        TravelDistancesloadedExcel = load_workbook(filepath)
+        TravelDistancesWorksheet = TravelDistancesloadedExcel.active
+        for TravelDistanceRow in TravelDistancesWorksheet.values:
+            if TravelDistanceRow[0] in ["Terminal"]:
+                Terminals = []
+                for terminals_readout in range(len(TravelDistanceRow)-1):
+                    terminals_readout += 1
+                    Terminals.append(str(TravelDistanceRow[terminals_readout]))
+            if TravelDistanceRow[0] not in ["Terminal","Bay"]:
+                if TravelDistanceRow[0] != None:
+                    TravelDistanceGate = str(TravelDistanceRow[0])
+                    t_counter = 0
+                    for Distance in TravelDistanceRow:
+                        if Distance == TravelDistanceGate:
+                            pass #print Distance
+                        else:
+                            TravelDistances[(Terminals[t_counter],TravelDistanceGate)] = int(Distance)
+                            t_counter += 1
 
-	#================================================================================
-	# Info
-	#================================================================================
+        return TravelDistances
 
-	def PrintInfo(self):
+    #================================================================================
+    # Virtual Bays
+    #================================================================================
+    
+    def CreateVirtualBays(self,per=0.2):
+        #----------------------------------------
+        # Add Virtual/Infeasible Bays
+        #----------------------------------------
 
-		print self.GetInfoText()
+        self.VirtualBays = []
+        NrVirtualBays = int(len(self.Bays)*per)
+        for i in range(NrVirtualBays):
+            b = Bay(Name="X"+str(i+1),Color=[0]*3)
+            b.Virtual = True
+            self.VirtualBays.append(b)
+        self.Bays+=self.VirtualBays
+        print str(NrVirtualBays)+" have been Created!"
 
-	def GetInfoText(self):
+        #----------------------------------------
+        # Update TravelDistances
+        #----------------------------------------
+       
+        if 0: # 1:
+            for bay in self.VirtualBays:
+                for terminal in self.Terminals:
+                    self.TravelDistances[(terminal,bay.Name)] = 24*3600
 
-		InfoText = ""
-		InfoText+="Airport: "+self.Name+"\n"
-		InfoText+=" "*3+"T_Open:  "+str(self.T_Open.time()) +"\n"
-		InfoText+=" "*3+"T_Close: "+str(self.T_Close.time())+"\n"
+    #================================================================================
+    # Info
+    #================================================================================
 
-		InfoText+=" "*3+"Gates: ("+str(len(self.Gates))+") "+str(self.Gates)+"\n"
-		InfoText+=" "*3+"Bays:  ("+str(len(self.Bays)) +") "+str(self.Bays) +"\n"
-		InfoText+=" "*3+"TravelDistances:  "+str(self.TravelDistances) +"\n"
-		return InfoText	
+    def PrintInfo(self):
 
-	def __repr__(self):
-		return self.GetInfoText()
+        print self.GetInfoText()
+
+    def GetInfoText(self):
+
+        InfoText = ""
+        InfoText+="Airport: "+self.Name+"\n"
+        InfoText+=" "*3+"T_Open:  "+str(self.T_Open.time()) +"\n"
+        InfoText+=" "*3+"T_Close: "+str(self.T_Close.time())+"\n"
+
+        InfoText+=" "*3+"Gates: ("+str(len(self.Gates))+") "+str(self.Gates)+"\n"
+        InfoText+=" "*3+"Bays:  ("+str(len(self.Bays)) +") "+str(self.Bays) +"\n"
+        InfoText+=" "*3+"TravelDistances:  "+str(self.TravelDistances) +"\n"
+        return InfoText 
+
+    def __repr__(self):
+        return self.GetInfoText()
 
 #****************************************************************************************************
 # Test Code
 #****************************************************************************************************
 
 if __name__=="__main__":
-	TestAirport = Airport()
-	print TestAirport
+    TestAirport = Airport()
+    print TestAirport

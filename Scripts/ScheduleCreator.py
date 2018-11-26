@@ -49,19 +49,20 @@ class ScheduleCreator(object):
     # Initialization
     #================================================================================
     
-    def __init__(self, Airport,MaxNrAircraft=None,MaxNrOverlappingAircraft=30,ScheduleFolder="Temp",AutoRun=True):
+    def __init__(self, Airport,MaxNrAircraft=None,MaxNrOverlappingAircraft=30,MaxNrDays=1,ScheduleFolder="Temp",AutoRun=True):
         super(ScheduleCreator, self).__init__()
 
         self.Airport                  = Airport
         self.MaxNrAircraft            = MaxNrAircraft
         self.MaxNrOverlappingAircraft = MaxNrOverlappingAircraft
+        self.MaxNrDays                = MaxNrDays
 
         self.ScheduleFolder = os.path.realpath(ScheduleFolder)
         if not os.path.exists(self.ScheduleFolder): os.makedirs(self.ScheduleFolder)
 
         if self.MaxNrAircraft is None:
             AverageStayTime = 3.0#2.5 # [h]
-            self.MaxNrAircraft = int((self.Airport.GetOperationalTime()/3600.)*self.MaxNrOverlappingAircraft/float(AverageStayTime))
+            self.MaxNrAircraft = int((self.Airport.GetOperationalTime()/3600.)*self.MaxNrOverlappingAircraft/float(AverageStayTime)/2)*self.MaxNrDays
 
         if AutoRun:
             self.Run()
@@ -84,7 +85,7 @@ class ScheduleCreator(object):
         print "Created Schedule ("+str(len(self.Schedule))+"-Aircraft) @"+str(Now())+"\t in "+str(round(dt,1))+"s"
         print "="*80
 
-    def CreateAircraftSchedule(self,TimeRange=[45*60,20*3600],MinTimeStep=5*60,MaxNrDays=2,Sort=True,RefDate=ReferenceDate,NightStayMandatory=True):
+    def CreateAircraftSchedule(self,TimeRange=[45*60,20*3600],MinTimeStep=5*60,Sort=True,RefDate=ReferenceDate,NightStayMandatory=True):
 
         self.Schedule = []
 
@@ -148,7 +149,7 @@ class ScheduleCreator(object):
             # Add Days
             #..............................
             
-            Day = np.random.randint(MaxNrDays)
+            Day = np.random.randint(self.MaxNrDays)
             Arrival  +=datetime.timedelta(days=Day)
             Departure+=datetime.timedelta(days=Day)
 
@@ -255,7 +256,8 @@ class ScheduleCreator(object):
 
         if Show: plt.show()
 
-    def ShowAirportDayLines(self,MaxNrDays=2):
+    def ShowAirportDayLines(self,MaxNrDays=None):
+        if MaxNrDays is None: MaxNrDays = self.MaxNrDays
         for i in range(MaxNrDays):
             Open_t  = (self.Airport.T_Open -dt0).total_seconds()/3600. +24*i
             Close_t = (self.Airport.T_Close-dt0).total_seconds()/3600. +24*i
