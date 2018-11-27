@@ -24,6 +24,8 @@ from time import time as getTime
 
 import matplotlib.pyplot as plt
 
+from collections import Counter
+
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Internal
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -253,6 +255,8 @@ class ScheduleCreator(object):
         self.ShowAircraftOnGround(    Show=False)
         self.ShowAircraftGroundTime(  Show=False)
         self.ShowAircraftNrPassengers(Show=False)
+        self.ShowAircraftTypes(       Show=False)
+        
 
         if Show: plt.show()
 
@@ -457,6 +461,53 @@ class ScheduleCreator(object):
         title = self.Airport.Name+" - Aircraft NrPassengers"
         plt.savefig(os.path.join(self.ScheduleFolder,title))
         if Show: plt.show(title)
+
+
+    def ShowAircraftTypes(self,Show=True):
+
+            fig,ax=plt.subplots(figsize=(16,9),dpi=120)
+
+            #----------------------------------------
+            # Set Data
+            #----------------------------------------
+     
+            ACTypes = []
+            for aircraft in self.Schedule:
+                ACTypes.append(aircraft.Type)
+
+            ACT_Counter = Counter(ACTypes)
+
+            NR_ofAC = ACT_Counter.values()
+            AC_model= ACT_Counter.keys()
+
+            print len(ACT_Counter.values())
+            print len(ACT_Counter.keys())
+            
+            types  = np.arange(len(ACT_Counter))
+            ax.bar(types, NR_ofAC, align='center')
+
+            ax.xaxis.set_major_locator(plt.FixedLocator(types))
+            ax.xaxis.set_major_formatter(plt.FixedFormatter(AC_model))
+
+            #----------------------------------------
+            # Configure Plot
+            #----------------------------------------
+            
+            #..............................
+            # Label
+            #..............................
+            
+            plt.xlabel("Aircraft Types")
+            plt.ylabel("Nr of Aircraft [#]")
+            
+            #..............................
+            # Layout
+            #..............................
+            
+            plt.tight_layout()
+            title = self.Airport.Name+" - Aircraft Types"
+            plt.savefig(os.path.join(self.ScheduleFolder,title))
+            if Show: plt.show(title)
 
 #****************************************************************************************************
 # Test Code
