@@ -175,8 +175,8 @@ class ScheduleCreator(object):
             #--- Preferences ---
             BayPreference  = None
             GatePreference = None
-            if np.random.uniform()<=0.1: 
-                BayPreference = np.random.choice(self.Airport.Bays).Name
+            if np.random.uniform()<=0.125: 
+                BayPreference = np.random.choice(self.Airport.Gates).Name
                 if BayPreference in self.Airport.Gates_dict.keys():
                     GatePreference = BayPreference
 
