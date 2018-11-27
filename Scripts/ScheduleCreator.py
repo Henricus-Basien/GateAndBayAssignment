@@ -170,20 +170,24 @@ class ScheduleCreator(object):
             if np.random.uniform()<=0.75: NeedsFueling = True
             else:                         NeedsFueling = False 
 
-            #--- BayPreference ---
-            BayPreference = None
+            #--- Preferences ---
+            BayPreference  = None
+            GatePreference = None
             if np.random.uniform()<=0.1: 
                 BayPreference = np.random.choice(self.Airport.Bays).Name
+                if BayPreference in self.Airport.Gates_dict.keys():
+                    GatePreference = BayPreference
 
             #----------------------------------------
             # Create Aircraft
             #----------------------------------------
             
             a = AircraftType(ID=ID, Arrival=Arrival,Departure=Departure,NrPassengers=NrPassengers)
-            a.Airline       = airline
-            a.Domestic      = Domestic
-            a.NeedsFueling  = NeedsFueling
-            a.BayPreference = BayPreference
+            a.Airline        = airline
+            a.Domestic       = Domestic
+            a.NeedsFueling   = NeedsFueling
+            a.BayPreference  = BayPreference
+            a.GatePreference = GatePreference
 
             self.Schedule.append(a)
 
@@ -215,15 +219,16 @@ class ScheduleCreator(object):
         # Write Header
         #----------------------------------------
         
-        ws.cell(row=1, column=1).value = "ID"
-        ws.cell(row=1, column=2).value = "Type"
-        ws.cell(row=1, column=3).value = "Airline"
-        ws.cell(row=1, column=4).value = "Arrival"
-        ws.cell(row=1, column=5).value = "Departure"
-        ws.cell(row=1, column=6).value = "NrPassengers"
-        ws.cell(row=1, column=7).value = "Domestic"
-        ws.cell(row=1, column=8).value = "NeedsFueling"
-        ws.cell(row=1, column=9).value = "BayPreference"
+        ws.cell(row=1, column=1 ).value = "ID"
+        ws.cell(row=1, column=2 ).value = "Type"
+        ws.cell(row=1, column=3 ).value = "Airline"
+        ws.cell(row=1, column=4 ).value = "Arrival"
+        ws.cell(row=1, column=5 ).value = "Departure"
+        ws.cell(row=1, column=6 ).value = "NrPassengers"
+        ws.cell(row=1, column=7 ).value = "Domestic"
+        ws.cell(row=1, column=8 ).value = "NeedsFueling"
+        ws.cell(row=1, column=9 ).value = "BayPreference"
+        ws.cell(row=1, column=10).value = "GatePreference"
 
         #----------------------------------------
         # Write Data
@@ -231,15 +236,17 @@ class ScheduleCreator(object):
 
         for i in range(self.MaxNrAircraft):
             aircraft = self.Schedule[i]
-            ws.cell(row=i+2, column=1).value = aircraft.ID
-            ws.cell(row=i+2, column=2).value = aircraft.Type
-            ws.cell(row=i+2, column=3).value = aircraft.Airline.Name
-            ws.cell(row=i+2, column=4).value = aircraft.Arrival#.time()
-            ws.cell(row=i+2, column=5).value = aircraft.Departure#.time()
-            ws.cell(row=i+2, column=6).value = aircraft.NrPassengers
-            ws.cell(row=i+2, column=7).value = aircraft.Domestic
-            ws.cell(row=i+2, column=8).value = aircraft.NeedsFueling
-            ws.cell(row=i+2, column=9).value = aircraft.BayPreference
+            ws.cell(row=i+2, column=1 ).value = aircraft.ID
+            ws.cell(row=i+2, column=2 ).value = aircraft.Type
+            ws.cell(row=i+2, column=3 ).value = aircraft.Airline.Name
+            ws.cell(row=i+2, column=4 ).value = aircraft.Arrival#.time()
+            ws.cell(row=i+2, column=5 ).value = aircraft.Departure#.time()
+            ws.cell(row=i+2, column=6 ).value = aircraft.NrPassengers
+            ws.cell(row=i+2, column=7 ).value = aircraft.Domestic
+            ws.cell(row=i+2, column=8 ).value = aircraft.NeedsFueling
+            ws.cell(row=i+2, column=9 ).value = aircraft.BayPreference
+            ws.cell(row=i+2, column=10).value = aircraft.GatePreference
+
 
         wb.save(os.path.join(self.ScheduleFolder,"Airport '"+str(self.Airport.Name)+"' - Schedule.xlsx"))
 
@@ -256,7 +263,7 @@ class ScheduleCreator(object):
 
         if Show:
             plt.show()
-            plt.close('all')
+        plt.close('all')
 
     def ShowAirportDayLines(self,MaxNrDays=None):
         if MaxNrDays is None: MaxNrDays = self.MaxNrDays

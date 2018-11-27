@@ -88,6 +88,9 @@ class GateAndBayAssignmentSolver(object):
             self.Scheduler = ScheduleCreator(self.Airport,MaxNrOverlappingAircraft=MaxNrAircraft,ScheduleFolder="Schedules",AutoRun=False)
             self.Scheduler.Run(Visualize=True)
             self.Schedule  = self.Scheduler.Schedule
+        self.Schedule_dict = OrderedDict()
+        for aircraft in self.Schedule:
+            self.Schedule_dict[aircraft.ID] = aircraft
 
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         # Run
@@ -105,6 +108,7 @@ class GateAndBayAssignmentSolver(object):
         t0 = getTime()
 
         self.Run(Mode="Bay")
+        self.SetupGatePreferences()
         self.Run(Mode="Gate")
 
         dt = getTime()-t0
@@ -174,6 +178,9 @@ class GateAndBayAssignmentSolver(object):
             self.InFeasibleVariables = []
         #--- Variables & Objectives ---
         LP+=self.GetLP_Variables()
+        if self.Mode=="Gate":
+            self.SetAdjacencyConstraints()
+            LP+=self.GetLP_AdjacencyVariables()
         LP+=self.GetLP_ObjectiveFunctions()
         #--- Constaints ---
         if not self.RemoveInfeasibleVariables:
@@ -213,6 +220,16 @@ class GateAndBayAssignmentSolver(object):
                 self.Variables.append(var)
         
         Variables = ["Var: "+v for v in self.Variables]
+
+        Variables.append("#"*100)
+
+        return Variables
+
+    def GetLP_AdjacencyVariables(self):
+
+        self.AdjacencyVariables = self.AdjacencyConstraints.values()
+
+        Variables = ["Var: "+v for v in self.AdjacencyVariables]
 
         Variables.append("#"*100)
 
@@ -261,7 +278,7 @@ class GateAndBayAssignmentSolver(object):
                         BayName = BayName.rstrip("ABCD LR")
                     TravelDistance = self.Airport.TravelDistances_Bays[(Terminal,BayName)]
                 ObjectiveFunction_TransportDistance+= var+"*"+str(a.NrPassengers)+"*"+str(TravelDistance)+ "+"
-        ObjectiveFunction_TransportDistance+=' - Z1 == 0'#'0 == Z1'
+        ObjectiveFunction_TransportDistance+=' - Z1 == 0'
 
         ObjectiveFunctions.append(ObjectiveFunction_TransportDistance)
 
@@ -275,13 +292,13 @@ class GateAndBayAssignmentSolver(object):
         ObjectiveFunction_AirlinePreference = ""
         for i in range(len(self.Schedule)):
             a = self.Schedule[i]
-            for k in range(len(self.Slots)):
+            for k in range(len(self.Airport.Bays)):
                 var = self.GetVarName(i,k)
                 if self.RemoveInfeasibleVariables and var in self.InFeasibleVariables: continue
-                b = self.Slots[k]
+                b = self.Airport.Bays[k]
                 if hasattr(a,"BayPreference") and a.BayPreference is not None and a.BayPreference==b.Name:
                     ObjectiveFunction_AirlinePreference+= var+ "+"
-        ObjectiveFunction_AirlinePreference+=' - Z2 == 0'#'0 == Z2'
+        ObjectiveFunction_AirlinePreference+=' - Z2 == 0'
 
         ObjectiveFunctions.append(ObjectiveFunction_AirlinePreference)
 
@@ -293,7 +310,7 @@ class GateAndBayAssignmentSolver(object):
         ObjectiveFunctions.append("Var: Z3")
 
         ObjectiveFunction_RelocationPenalty = ""
-        ObjectiveFunction_RelocationPenalty+=' - Z3 == 0'#'0 == Z3'
+        ObjectiveFunction_RelocationPenalty+=' - Z3 == 0'
 
         ObjectiveFunctions.append(ObjectiveFunction_RelocationPenalty)
 
@@ -307,7 +324,7 @@ class GateAndBayAssignmentSolver(object):
 
         alpha = 1.0
         beta  = Z1_Max
-        gamma = Z1_Max+2*beta
+        gamma = 3*beta
 
         if 1:
             ObjectiveFunctions.append("Var: Z4")
@@ -355,15 +372,55 @@ class GateAndBayAssignmentSolver(object):
                         GateName = GateName.rstrip("ABCD LR")
                     TravelDistance = self.Airport.TravelDistances_Gates[(Terminal,GateName)]
                 ObjectiveFunction_TransportDistance+= var+"*"+str(a.NrPassengers)+"*"+str(TravelDistance)+ "+"
-        ObjectiveFunction_TransportDistance+=' - Z6 == 0'#'0 == Z1'
+        ObjectiveFunction_TransportDistance+=' - Z6 == 0'
 
         ObjectiveFunctions.append(ObjectiveFunction_TransportDistance)
+
+        #..............................
+        # Objective AirlinePreference (Z7)
+        #..............................
+    
+        ObjectiveFunctions.append("# ObjectiveFunction - AirlinePreference")
+        ObjectiveFunctions.append("Var: Z7")
+
+        ObjectiveFunction_AirlinePreference = ""
+        for i in range(len(self.Schedule)):
+            a = self.Schedule[i]
+            for k in range(len(self.Airport.Gates)):
+                var = self.GetVarName(i,k)
+                if self.RemoveInfeasibleVariables and var in self.InFeasibleVariables: continue
+                g = self.Airport.Gates[k]
+                if hasattr(a,"GatePreference") and a.GatePreference is not None and a.GatePreference==g.Name:
+                    ObjectiveFunction_AirlinePreference+= var+ "+"
+        ObjectiveFunction_AirlinePreference+=' - Z7 == 0'
+
+        ObjectiveFunctions.append(ObjectiveFunction_AirlinePreference)
+
+        #..............................
+        # Objective Adjacency (Z8)
+        #..............................
+    
+        ObjectiveFunctions.append("# ObjectiveFunction - Adjacency")
+        ObjectiveFunctions.append("Var: Z8")
+
+        ObjectiveFunction_Adjacency = ""
+        for var in self.AdjacencyConstraints.values():
+            ObjectiveFunction_Adjacency+=var+" + "
+        ObjectiveFunction_Adjacency+=' - Z8 == 0'
+
+        ObjectiveFunctions.append(ObjectiveFunction_Adjacency)
         
         #..............................
         # Combine Objective
         #..............................
 
-        ObjectiveFunctions.append('Z6 , "Z"')       
+        Z6_Max = np.max([a.NrPassengers for a in self.Schedule])*np.max(self.Airport.TravelDistances_Gates.values()) #1
+
+        delta   = 1.0
+        epsilon = Z6_Max
+        zeta    = Z6_Max+2*epsilon
+
+        ObjectiveFunctions.append(str(delta)+'*Z6 - '+str(epsilon)+'*Z7 + '+str(zeta)+'*Z8 , "Z"')       
 
         #..............................
         # Addendum
@@ -422,9 +479,28 @@ class GateAndBayAssignmentSolver(object):
                     var1 = self.GetVarName(i,k)
                     var2 = self.GetVarName(j,k)
                     if self.RemoveInfeasibleVariables and (var1 in self.InFeasibleVariables or var2 in self.InFeasibleVariables): continue
-                    TimeConstraints.append(var1 + " + " + var2 + " <= 1")
+                    TimeConstraint = var1 + " + " + var2
+                    if self.Mode=="Gate" and (k,i,j) in self.AdjacencyConstraints:
+                        TimeConstraint+=" - "+self.AdjacencyConstraints[(k,i,j)]
+                    TimeConstraint+=" <= 1"
+                    TimeConstraints.append(TimeConstraint)
 
         return TimeConstraints
+
+    def SetAdjacencyConstraints(self):
+
+        self.AdjacencyConstraints = OrderedDict()
+
+        for i in range(len(self.Schedule)):
+            a1 = self.Schedule[i]
+            for j in range(i,len(self.Schedule)):
+                a2 = self.Schedule[j]
+                #--- Avoid unrequired Constraints ---
+                if i==j: continue
+                if not self.ScheduleClash(a1,a2): continue
+                #--- Cycle all Slots ---
+                for k in range(len(self.Slots)):
+                    self.AdjacencyConstraints[(k,i,j)] = "S_"+str(k)+"_"+str(i)+"_"+str(j)
 
     def ScheduleClash(self,a1,a2):
         #--- Base Constraints ---
@@ -558,7 +634,7 @@ class GateAndBayAssignmentSolver(object):
     
     def ExportResult(self):
 
-        with open(os.path.join(self.LP_Path,"LP_result.txt"),"w") as ResultsFile:
+        with open(os.path.join(self.LP_Path,self.Mode+"Assignment"+" - "+"LP_result.txt"),"w") as ResultsFile:
             for variable in self.lp_problem.variables():
                 ResultsFile.write("{} = {}".format(variable.name, variable.varValue)+"\n")
 
@@ -597,6 +673,18 @@ class GateAndBayAssignmentSolver(object):
             print "FlightID | "+self.Mode+"ID"
             for key in self.SlotAssignment.keys():
                 print key,"\t|",self.SlotAssignment[key]
+
+    #----------------------------------------
+    # Gate Preferences
+    #----------------------------------------
+    
+    def SetupGatePreferences(self):
+
+        for FlightID in self.SlotAssignment:
+            aircraft = self.Schedule_dict[FlightID]
+            Bay = self.SlotAssignment[FlightID]
+            if aircraft.GatePreference is None and Bay in self.Airport.Gates_dict.keys():
+                aircraft.GatePreference = Bay
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Plot Result
@@ -670,6 +758,26 @@ class GateAndBayAssignmentSolver(object):
 #****************************************************************************************************
 
 if __name__=="__main__":
+
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Seed
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    
+    Seed = raw_input(">>> Please Enter a seed for the stochastic Realization [ENTER for random value]: ")
+    Seed = Seed.strip()
+    if Seed=="":
+        Seed = np.random.randint(10**9)
+    try:
+        Seed = int(Seed)
+    except:
+        print "ERROR: Seed '"+str(Seed)+"' is not possible, numerical values only!"
+        quit()
+
+    np.random.seed(Seed)
+
+    print "*"*100
+    print ">"*3+" "+"Initialized Simulation with Seed '"+str(Seed)+"'"
+    print "*"*100
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Imports
