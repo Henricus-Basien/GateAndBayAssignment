@@ -223,9 +223,9 @@ class ScheduleCreator(object):
         
         ws.cell(row=1, column=1 ).value = "ID"
         ws.cell(row=1, column=2 ).value = "Type"
-        ws.cell(row=1, column=3 ).value = "Airline [datetime]"
+        ws.cell(row=1, column=3 ).value = "Airline"
         ws.cell(row=1, column=4 ).value = "Arrival [datetime]"
-        ws.cell(row=1, column=5 ).value = "Departure"
+        ws.cell(row=1, column=5 ).value = "Departure [datetime]"
         ws.cell(row=1, column=6 ).value = "GroundTime [h]"
         ws.cell(row=1, column=7 ).value = "NrPassengers [#]"
         ws.cell(row=1, column=8 ).value = "Domestic [bool]"

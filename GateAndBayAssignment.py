@@ -36,8 +36,11 @@ sys.path.insert(0,os.path.join(RootPath,"Scripts"))
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 from collections import OrderedDict
+from copy import copy
 
 import pulp
+
+import openpyxl
 
 from datetime import datetime
 Now = datetime.now
@@ -107,9 +110,11 @@ class GateAndBayAssignmentSolver(object):
 
         t0 = getTime()
 
-        self.Run(Mode="Bay")
+        self.Run(Mode="Bay")  # ; self.BayAssignment  = copy(self.SlotAssignment)
         self.SetupGatePreferences()
-        self.Run(Mode="Gate")
+        self.Run(Mode="Gate") # ; self.GateAssignment = copy(self.SlotAssignment)
+
+        self.ExportAllToExcel()
 
         dt = getTime()-t0
         print "*"*100
@@ -480,8 +485,9 @@ class GateAndBayAssignmentSolver(object):
                     var2 = self.GetVarName(j,k)
                     if self.RemoveInfeasibleVariables and (var1 in self.InFeasibleVariables or var2 in self.InFeasibleVariables): continue
                     TimeConstraint = var1 + " + " + var2
-                    if self.Mode=="Gate" and (k,i,j) in self.AdjacencyConstraints:
-                        TimeConstraint+=" - "+self.AdjacencyConstraints[(k,i,j)]
+                    AdjacencyKey = (i,j)#(k,i,j)
+                    if self.Mode=="Gate" and AdjacencyKey in self.AdjacencyConstraints:
+                        TimeConstraint+=" - "+self.AdjacencyConstraints[AdjacencyKey]
                     TimeConstraint+=" <= 1"
                     TimeConstraints.append(TimeConstraint)
 
@@ -498,9 +504,13 @@ class GateAndBayAssignmentSolver(object):
                 #--- Avoid unrequired Constraints ---
                 if i==j: continue
                 if not self.ScheduleClash(a1,a2): continue
-                #--- Cycle all Slots ---
-                for k in range(len(self.Slots)):
-                    self.AdjacencyConstraints[(k,i,j)] = "S_"+str(k)+"_"+str(i)+"_"+str(j)
+                #--- Set Adjacancy ---
+                AdjacencyKey = (i,j)
+                self.AdjacencyConstraints[AdjacencyKey] = "S_"+str(i)+"_"+str(j)
+                ##--- Cycle all Slots ---
+                # for k in range(len(self.Slots)):
+                #     AdjacencyKey = (k,i,j)
+                #     self.AdjacencyConstraints[AdjacencyKey] = "S_"+str(k)+"_"+str(i)+"_"+str(j)
 
     def ScheduleClash(self,a1,a2):
         #--- Base Constraints ---
@@ -553,6 +563,7 @@ class GateAndBayAssignmentSolver(object):
 
         t0 = getTime()
 
+        # print "Init Problem"
         self.lp_problem = pulp.LpProblem(self.Mode+" Assignment Problem", pulp.LpMinimize)
 
         with open(self.LP_filepath) as LP_File:
@@ -629,16 +640,6 @@ class GateAndBayAssignmentSolver(object):
         print " "*3+str(Objective)
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    # Export
-    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    
-    def ExportResult(self):
-
-        with open(os.path.join(self.LP_Path,self.Mode+"Assignment"+" - "+"LP_result.txt"),"w") as ResultsFile:
-            for variable in self.lp_problem.variables():
-                ResultsFile.write("{} = {}".format(variable.name, variable.varValue)+"\n")
-
-    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Convert Result
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         
@@ -665,6 +666,13 @@ class GateAndBayAssignmentSolver(object):
                 self.SlotAssignment_Dual[K] = []
             self.SlotAssignment_Dual[K].append(self.Schedule[i])
 
+            #--- Store in Aircraft ---
+            aircraft = self.Schedule[i]
+            if   self.Mode=="Bay":
+                aircraft.BayAssigned  = self.Slots[k].Name
+            elif self.Mode=="Gate":
+                aircraft.GateAssigned = self.Slots[k].Name
+
         #--- Sort ---
         self.SlotAssignment_Dual = OrderedDict(sorted(self.SlotAssignment_Dual.items(), key=lambda t: t[0]))
 
@@ -685,6 +693,65 @@ class GateAndBayAssignmentSolver(object):
             Bay = self.SlotAssignment[FlightID]
             if aircraft.GatePreference is None and Bay in self.Airport.Gates_dict.keys():
                 aircraft.GatePreference = Bay
+
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Export
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    
+    def ExportResult(self):
+
+        with open(os.path.join(self.LP_Path,self.Mode+"Assignment"+" - "+"LP_result.txt"),"w") as ResultsFile:
+            for variable in self.lp_problem.variables():
+                ResultsFile.write("{} = {}".format(variable.name, variable.varValue)+"\n")
+
+    def ExportAllToExcel(self):
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+
+        #----------------------------------------
+        # Write Header
+        #----------------------------------------
+        
+        #--- Info ---
+        ws.cell(row=1, column=1 ).value = "ID"
+        ws.cell(row=1, column=2 ).value = "Type"
+        ws.cell(row=1, column=3 ).value = "Airline"
+        ws.cell(row=1, column=4 ).value = "Arrival [datetime]"
+        ws.cell(row=1, column=5 ).value = "Departure [datetime]"
+        #--- Assignment ---
+        ws.cell(row=1, column=6 ).value = "Bay-Assigned"
+        ws.cell(row=1, column=7 ).value = "Bay-Prefered"
+        ws.cell(row=1, column=8 ).value = "Bay-PreferenceMet"
+        ws.cell(row=1, column=9 ).value = "Gate-Assigned"
+        ws.cell(row=1, column=10).value = "Gate-Prefered"
+        ws.cell(row=1, column=11).value = "Gate-PreferenceMet"
+
+        #----------------------------------------
+        # Write Data
+        #----------------------------------------
+
+        for i in range(self.MaxNrAircraft):
+            aircraft = self.Schedule[i]
+            #--- Info ---
+            ws.cell(row=i+2, column=1 ).value = aircraft.ID
+            ws.cell(row=i+2, column=2 ).value = aircraft.Type
+            ws.cell(row=i+2, column=3 ).value = aircraft.Airline.Name
+            ws.cell(row=i+2, column=4 ).value = aircraft.Arrival#.time()
+            ws.cell(row=i+2, column=5 ).value = aircraft.Departure#.time()
+            #--- Assignment ---
+            ws.cell(row=i+2, column=6 ).value  = aircraft.BayAssigned
+            ws.cell(row=i+2, column=7 ).value  = aircraft.BayPreference
+            ws.cell(row=i+2, column=8 ).value  = aircraft.BayAssigned == aircraft.BayPreference
+            ws.cell(row=i+2, column=9 ).value  = aircraft.GateAssigned
+            ws.cell(row=i+2, column=10).value  = aircraft.GatePreference
+            ws.cell(row=i+2, column=11).value  = aircraft.GateAssigned == aircraft.GatePreference
+
+
+        title = self.FormatTitle("Schedule.xlsx")
+        wb.save(os.path.join(self.ScheduleFolder,title))
+        print ">"+" "+"Exported '"+title+"'"
+
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Plot Result
