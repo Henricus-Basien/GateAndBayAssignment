@@ -223,14 +223,16 @@ class ScheduleCreator(object):
         
         ws.cell(row=1, column=1 ).value = "ID"
         ws.cell(row=1, column=2 ).value = "Type"
-        ws.cell(row=1, column=3 ).value = "Airline"
-        ws.cell(row=1, column=4 ).value = "Arrival"
+        ws.cell(row=1, column=3 ).value = "Airline [datetime]"
+        ws.cell(row=1, column=4 ).value = "Arrival [datetime]"
         ws.cell(row=1, column=5 ).value = "Departure"
-        ws.cell(row=1, column=6 ).value = "NrPassengers"
-        ws.cell(row=1, column=7 ).value = "Domestic"
-        ws.cell(row=1, column=8 ).value = "NeedsFueling"
-        ws.cell(row=1, column=9 ).value = "BayPreference"
-        ws.cell(row=1, column=10).value = "GatePreference"
+        ws.cell(row=1, column=6 ).value = "GroundTime [h]"
+        ws.cell(row=1, column=7 ).value = "NrPassengers [#]"
+        ws.cell(row=1, column=8 ).value = "Domestic [bool]"
+        ws.cell(row=1, column=9 ).value = "NeedsFueling [bool]"
+        ws.cell(row=1, column=10).value = "BayPreference"
+        ws.cell(row=1, column=11).value = "GatePreference"
+        ws.cell(row=1, column=12).value = "NightStay [bool]"
 
         #----------------------------------------
         # Write Data
@@ -243,13 +245,17 @@ class ScheduleCreator(object):
             ws.cell(row=i+2, column=3 ).value = aircraft.Airline.Name
             ws.cell(row=i+2, column=4 ).value = aircraft.Arrival#.time()
             ws.cell(row=i+2, column=5 ).value = aircraft.Departure#.time()
-            ws.cell(row=i+2, column=6 ).value = aircraft.NrPassengers
-            ws.cell(row=i+2, column=7 ).value = aircraft.Domestic
-            ws.cell(row=i+2, column=8 ).value = aircraft.NeedsFueling
-            ws.cell(row=i+2, column=9 ).value = aircraft.BayPreference
-            ws.cell(row=i+2, column=10).value = aircraft.GatePreference
+            ws.cell(row=i+2, column=6 ).value = round(aircraft.GroundTime/3600.,1)
+            ws.cell(row=i+2, column=7 ).value = aircraft.NrPassengers
+            ws.cell(row=i+2, column=8 ).value = aircraft.Domestic
+            ws.cell(row=i+2, column=9 ).value = aircraft.NeedsFueling
+            ws.cell(row=i+2, column=10).value = aircraft.BayPreference
+            ws.cell(row=i+2, column=11).value = aircraft.GatePreference
+            ws.cell(row=i+2, column=12).value = aircraft.Arrival.day!=aircraft.Departure.day
 
-        wb.save(os.path.join(self.ScheduleFolder,self.FormatTitle("Schedule.xlsx")))
+        title = self.FormatTitle("Schedule.xlsx")
+        wb.save(os.path.join(self.ScheduleFolder,title))
+        print ">"+" "+"Exported '"+title+"'"
 
     #================================================================================
     # Visualize
