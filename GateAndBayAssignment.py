@@ -757,22 +757,23 @@ class GateAndBayAssignmentSolver(object):
 # Test Code
 #****************************************************************************************************
 
-if __name__=="__main__":
-
+def SolveGateAndBayAssignmentProblem(Seed=None,OnlyCreateSchedule=False):
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Seed
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     
-    Seed = raw_input(">>> Please Enter a seed for the stochastic Realization [ENTER for random value]: ")
-    Seed = Seed.strip()
-    if Seed=="":
-        Seed = np.random.randint(10**9)
+    if Seed is None:
+        Seed = raw_input(">>> Please Enter a seed for the stochastic Realization [ENTER for random value]: ")
+        Seed = Seed.strip()
+        if Seed=="":
+            Seed = np.random.randint(10**9)
     try:
         Seed = int(Seed)
     except:
         print "ERROR: Seed '"+str(Seed)+"' is not possible, numerical values only!"
         quit()
 
+    np.random.seed_backup = Seed
     np.random.seed(Seed)
 
     print "*"*100
@@ -792,4 +793,13 @@ if __name__=="__main__":
     airport = JKIA()
     airport.PrintInfo()
 
-    GABA_Solver = GateAndBayAssignmentSolver(airport)
+    GABA_Solver = GateAndBayAssignmentSolver(airport,AutoRun = not OnlyCreateSchedule)
+
+if __name__=="__main__":
+
+    if 1:
+        Seed = None # np.random.random()
+        SolveGateAndBayAssignmentProblem(Seed)
+    else:
+        for Seed in range(10):
+            SolveGateAndBayAssignmentProblem(Seed,OnlyCreateSchedule=True)

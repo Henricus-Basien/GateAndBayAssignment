@@ -249,8 +249,7 @@ class ScheduleCreator(object):
             ws.cell(row=i+2, column=9 ).value = aircraft.BayPreference
             ws.cell(row=i+2, column=10).value = aircraft.GatePreference
 
-
-        wb.save(os.path.join(self.ScheduleFolder,"Airport '"+str(self.Airport.Name)+"' - Schedule.xlsx"))
+        wb.save(os.path.join(self.ScheduleFolder,self.FormatTitle("Schedule.xlsx")))
 
     #================================================================================
     # Visualize
@@ -327,8 +326,9 @@ class ScheduleCreator(object):
         
         plt.xlim(left=0)
         plt.tight_layout()
-        title=self.Airport.Name+" - Schedule"
+        title = self.FormatTitle("Schedule")
         plt.savefig(os.path.join(self.ScheduleFolder,title))
+        print "Saved Figure '"+title+"'"
         if Show: plt.show(title)
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -387,8 +387,9 @@ class ScheduleCreator(object):
         
         plt.xlim(left=0)
         plt.tight_layout()
-        title = self.Airport.Name+" - Aircraft on Ground"
+        title = self.FormatTitle("Aircraft on Ground")
         plt.savefig(os.path.join(self.ScheduleFolder,title))
+        print "Saved Figure '"+title+"'"
         if Show: plt.show(title)
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -427,8 +428,9 @@ class ScheduleCreator(object):
         #..............................
         
         plt.tight_layout()
-        title = self.Airport.Name+" - Aircraft GroundTime"
+        title = self.FormatTitle("Aircraft GroundTime")
         plt.savefig(os.path.join(self.ScheduleFolder,title))
+        print "Saved Figure '"+title+"'"
         if Show: plt.show(title)
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -467,56 +469,63 @@ class ScheduleCreator(object):
         #..............................
         
         plt.tight_layout()
-        title = self.Airport.Name+" - Aircraft NrPassengers"
+        title = self.FormatTitle("Aircraft NrPassengers")
         plt.savefig(os.path.join(self.ScheduleFolder,title))
+        print "Saved Figure '"+title+"'"
         if Show: plt.show(title)
 
 
     def ShowAircraftTypes(self,Show=True):
 
-            fig,ax=plt.subplots(figsize=(16,9),dpi=120)
+        fig,ax=plt.subplots(figsize=(16,9),dpi=120)
 
-            #----------------------------------------
-            # Set Data
-            #----------------------------------------
-     
-            ACTypes = []
-            for aircraft in self.Schedule:
-                ACTypes.append(aircraft.Type)
+        #----------------------------------------
+        # Set Data
+        #----------------------------------------
+ 
+        ACTypes = []
+        for aircraft in self.Schedule:
+            ACTypes.append(aircraft.Type)
 
-            ACT_Counter = Counter(ACTypes)
+        ACT_Counter = Counter(ACTypes)
 
-            NR_ofAC = ACT_Counter.values()
-            AC_model= ACT_Counter.keys()
+        NR_ofAC = ACT_Counter.values()
+        AC_model= ACT_Counter.keys()
+        
+        types  = np.arange(len(ACT_Counter))
+        ax.bar(types, NR_ofAC, align='center')
 
-            print len(ACT_Counter.values())
-            print len(ACT_Counter.keys())
-            
-            types  = np.arange(len(ACT_Counter))
-            ax.bar(types, NR_ofAC, align='center')
+        ax.xaxis.set_major_locator(plt.FixedLocator(types))
+        ax.xaxis.set_major_formatter(plt.FixedFormatter(AC_model))
 
-            ax.xaxis.set_major_locator(plt.FixedLocator(types))
-            ax.xaxis.set_major_formatter(plt.FixedFormatter(AC_model))
+        #----------------------------------------
+        # Configure Plot
+        #----------------------------------------
+        
+        #..............................
+        # Label
+        #..............................
+        
+        plt.xlabel("Aircraft Types")
+        plt.ylabel("Nr of Aircraft [#]")
+        
+        #..............................
+        # Layout
+        #..............................
+        
+        plt.tight_layout()
+        title = self.FormatTitle("Aircraft Types")
+        plt.savefig(os.path.join(self.ScheduleFolder,title))
+        print "Saved Figure '"+title+"'"
+        if Show: plt.show(title)
 
-            #----------------------------------------
-            # Configure Plot
-            #----------------------------------------
-            
-            #..............................
-            # Label
-            #..............................
-            
-            plt.xlabel("Aircraft Types")
-            plt.ylabel("Nr of Aircraft [#]")
-            
-            #..............................
-            # Layout
-            #..............................
-            
-            plt.tight_layout()
-            title = self.Airport.Name+" - Aircraft Types"
-            plt.savefig(os.path.join(self.ScheduleFolder,title))
-            if Show: plt.show(title)
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Aircraft GroundTime
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    def FormatTitle(self,title):
+        Seed = np.random.seed_backup #np.random.get_state()[1][0]
+        return self.Airport.Name+" ("+str(Seed)+")"+" - "+title
 
 #****************************************************************************************************
 # Test Code
