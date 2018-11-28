@@ -50,7 +50,7 @@ class B737(Aircraft):
 
 class B73J(Aircraft):
 	Type            = "B73J"
-	MaxNrPassengers = 0
+	MaxNrPassengers = 180
 	WB              = False
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
