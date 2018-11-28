@@ -281,6 +281,7 @@ class ScheduleCreator(object):
         self.ShowAircraftGroundTime(  Show=False)
         self.ShowAircraftNrPassengers(Show=False)
         self.ShowAircraftTypes(       Show=False)
+        self.ShowAirlines(            Show=False)
         
 
         if Show:
@@ -493,6 +494,9 @@ class ScheduleCreator(object):
         print "> Saved Figure '"+title+"'"
         if Show: plt.show(title)
 
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Aircraft Types Histogram
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     def ShowAircraftTypes(self,Show=True):
 
@@ -537,6 +541,58 @@ class ScheduleCreator(object):
         plt.savefig(os.path.join(self.ScheduleFolder,title))
         print "> Saved Figure '"+title+"'"
         if Show: plt.show(title)
+
+
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Airlines Histogram
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    def ShowAirlines(self,Show=True):
+
+        fig,ax=plt.subplots(figsize=(16,9),dpi=120)
+
+        #----------------------------------------
+        # Set Data
+        #----------------------------------------
+ 
+        AirlinesHist = []
+        for aircraft in self.Schedule:
+            AirlinesHist.append(aircraft.Airline.Name)
+
+        Airline_Counter = Counter(AirlinesHist)
+
+        NR_ofAL     = Airline_Counter.values()
+        Airlinename = Airline_Counter.keys()
+        
+        ALnames  = np.arange(len(Airline_Counter))
+        ax.bar(ALnames, NR_ofAL, align='center')
+
+        ax.xaxis.set_major_locator(plt.FixedLocator(ALnames))
+        ax.xaxis.set_major_formatter(plt.FixedFormatter(Airlinename))
+
+        #----------------------------------------
+        # Configure Plot
+        #----------------------------------------
+        
+        #..............................
+        # Label
+        #..............................
+        
+        plt.xlabel("Airline")
+        plt.ylabel("Nr of Aircraft [#]")
+        
+        #..............................
+        # Layout
+        #..............................
+        
+        plt.tight_layout()
+        title = self.FormatTitle("Airlines")
+        plt.savefig(os.path.join(self.ScheduleFolder,title))
+        print "> Saved Figure '"+title+"'"
+        if Show: plt.show(title)
+
+
+
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Aircraft GroundTime
