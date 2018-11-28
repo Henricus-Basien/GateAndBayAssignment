@@ -14,6 +14,8 @@ Email: Henricus@Basien.de
 # External
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+# from collections import OrderedDict
+
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Internal
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -78,6 +80,11 @@ AllAirlines.append(Airline("CZ" , AircraftTypes=GetAircraftsByType(["A330"      
 AllAirlines.append(Airline("WB" , AircraftTypes=GetAircraftsByType(["B737", "Q400"                                              ])))
 AllAirlines.append(Airline("BA" , AircraftTypes=GetAircraftsByType(["B772"                                                      ])))
 AllAirlines.append(Airline("SV" , AircraftTypes=GetAircraftsByType(["A320"                                                      ])))
+
+# #--- Dict ---
+# AllAirlines_dict = OrderedDict()
+# for airline in AllAirlines:
+# 	AllAirlines_dict[airline.Name] = Airline
 
 #****************************************************************************************************
 # Test Code

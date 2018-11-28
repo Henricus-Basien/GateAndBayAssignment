@@ -37,7 +37,7 @@ class Airport(object):
     # Initialization
     #================================================================================
     
-    def __init__(self,Name="TestAirport",T_Open="08:00",T_Close="22:00",Terminals=None, Gates=None,Bays=None,TravelDistances_Gates={},TravelDistances_Bays={},Airlines=None,AddVirtualElements=True):
+    def __init__(self,Name="TestAirport",T_Open="08:00",T_Close="22:00",Terminals=None, Gates=None,Bays=None,TravelDistances_Gates={},TravelDistances_Bays={},Airlines=None,LocalAirline=None,AddVirtualElements=True):
         super(Airport, self).__init__()
 
         self.Name = Name
@@ -66,6 +66,12 @@ class Airport(object):
         if not hasattr(self,"Airlines") or Airlines is not None: self.Airlines = Airlines
         if self.Airlines is None:
             self.Airlines = AllAirlines
+        if not hasattr(self,"LocalAirline") or LocalAirline is not None: self.LocalAirline = LocalAirline
+        if self.LocalAirline is None:
+            self.LocalAirline = LocalAirline
+        self.SetupAirlineDict()
+        if type(self.LocalAirline)==str:
+            self.LocalAirline = self.Airlines_dict[self.LocalAirline]
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Count Elements
@@ -171,6 +177,16 @@ class Airport(object):
         self.Bays_dict = OrderedDict()
         for bay in self.Bays:
             self.Bays_dict[bay.Name] = bay
+
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Airlines
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    
+    def SetupAirlineDict(self,Force=False):
+        if hasattr(self,"Airlines_dict") and not Force: return
+        self.Airlines_dict = OrderedDict()
+        for airline in self.Airlines:
+            self.Airlines_dict[airline.Name] = airline
 
     #================================================================================
     # Virtual Elements

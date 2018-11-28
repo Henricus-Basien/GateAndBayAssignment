@@ -15,6 +15,7 @@ Email: Henricus@Basien.de
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 import os
+from copy import copy
 import openpyxl
 import datetime
 Now = datetime.datetime.now
@@ -100,8 +101,11 @@ class ScheduleCreator(object):
             #----------------------------------------
             # Airline
             #----------------------------------------
-            
-            airline = np.random.choice(self.Airport.Airlines)
+
+            if self.Airport.LocalAirline is None or float(i)/self.MaxNrAircraft>0.35:
+                airline = np.random.choice(self.Airport.Airlines)
+            else:
+                airline = copy(self.Airport.LocalAirline)
 
             #----------------------------------------
             # AircraftType
