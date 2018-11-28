@@ -746,9 +746,11 @@ class GateAndBayAssignmentSolver(object):
 
         for FlightID in self.SlotAssignment:
             aircraft = self.Schedule_dict[FlightID]
-            Bay = self.SlotAssignment[FlightID]
-            if aircraft.GatePreference is None and Bay in self.Airport.Gates_dict.keys():
-                aircraft.GatePreference = Bay
+            bayName  = self.SlotAssignment[FlightID]
+            if aircraft.GatePreference is None and bayName in self.Airport.Gates_dict.keys():
+                gate = self.Airport.Gates_dict[bayName]
+                if not gate.Virtual:
+                    aircraft.GatePreference = bayName
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Export
@@ -949,6 +951,12 @@ if __name__=="__main__":
     RunMode = raw_input("Please select GateAndBayAssignmentSolver Mode "+str(PossibleModes)+": ")
     RunMode = RunMode.strip()
 
+    try:
+        RunMode = int(RunMode)
+        RunMode = PossibleModes[RunMode-1]
+    except:
+        pass
+
     if RunMode=="":
         RunMode = "Manual"
 
@@ -983,13 +991,15 @@ if __name__=="__main__":
         if 0:
             Seeds = range(nCPU)
         else:
-            print "Please enter the Seed Values you'd like to run [ENTER to exit]:"
+            print "Please enter the Seed Values you'd like to run [ENTER to exit | 'r' for random]:"
             Seeds = []
             while True:
                 Seed = raw_input("SeedValue #"+str(len(Seeds)+1)+": ")
                 Seed = Seed.strip()
                 if Seed=="":
                     break
+                elif Seed=="r":
+                    Seed = np.random.randint(10**9)
                 try:
                     Seed = int(Seed)
                 except:
