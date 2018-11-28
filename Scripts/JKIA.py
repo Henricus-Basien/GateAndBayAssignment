@@ -47,6 +47,7 @@ class JKIA(Airport):
 
         #--- Airline/Aircraft ---
         self.SetupAirlines()
+        self.LocalAirline = "KQ"
         self.SetupAircraftGroups()
 
         #--- Layout ---

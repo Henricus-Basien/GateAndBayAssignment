@@ -106,7 +106,7 @@ class GateAndBayAssignmentSolver(object):
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         if self.Schedule is None:
-            MaxNrAircraft  = len(self.Airport.Bays)
+            MaxNrAircraft  = self.Airport.NrBays
             self.Scheduler = ScheduleCreator(self.Airport,MaxNrOverlappingAircraft=MaxNrAircraft,ScheduleFolder="Schedules",AutoRun=False)
             self.Scheduler.Run(Visualize=True)
             self.Schedule  = self.Scheduler.Schedule
@@ -806,11 +806,9 @@ class GateAndBayAssignmentSolver(object):
             ws.cell(row=i+2, column=10).value  = aircraft.GatePreference
             ws.cell(row=i+2, column=11).value  = aircraft.GateAssigned == aircraft.GatePreference
 
-
         title = self.FormatTitle("Schedule.xlsx")
         wb.save(os.path.join(self.ScheduleFolder,title))
         print ">"+" "+"Exported '"+title+"'"
-
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Plot Result
@@ -947,6 +945,8 @@ def SaveSolver(*args,**kwargs):
 
 if __name__=="__main__":
 
+    print "GateAndBayAssignmentSolver Started on: "+str(Now())
+
     PossibleModes = ["Manual","BatchScheduler","MultiSolver"]
     RunMode = raw_input("Please select GateAndBayAssignmentSolver Mode "+str(PossibleModes)+": ")
     RunMode = RunMode.strip()
@@ -969,18 +969,10 @@ if __name__=="__main__":
         SolveGateAndBayAssignmentProblem(Seed)
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    # Batch Scheduler
-    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    
-    elif RunMode.lower()=="batchscheduler": #1:
-        for Seed in range(10):
-            SolveGateAndBayAssignmentProblem(Seed,OnlyCreateSchedule=True)
-
-    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # MultiProcessed Solver
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     
-    elif RunMode.lower()=="multisolver":
+    elif RunMode.lower()=="multisolver" or RunMode.lower()=="batchscheduler":
         import pp,multiprocessing
         # from functools import partial
         nCPU = int(multiprocessing.cpu_count()/2-1)
@@ -988,8 +980,19 @@ if __name__=="__main__":
 
         print "Started PP Server with '"+str(nCPU)+"' CPUs"
 
-        if 0:
-            Seeds = range(nCPU)
+        #----------------------------------------
+        # Settings
+        #----------------------------------------
+        
+        if RunMode.lower()=="batchscheduler": OnlyCreateSchedule = True
+        else:                                 OnlyCreateSchedule = False
+
+        #----------------------------------------
+        # Get Seeds
+        #----------------------------------------
+        
+        if RunMode.lower()=="batchscheduler":
+            Seeds = range(100)
         else:
             print "Please enter the Seed Values you'd like to run [ENTER to exit | 'r' for random]:"
             Seeds = []
@@ -1016,7 +1019,7 @@ if __name__=="__main__":
             Seed = Seeds[i]
             print "Creating new PP_Job #"+str(i+1)+": Seed="+str(Seed)
             cmd    = SaveSolver #SolveGateAndBayAssignmentProblem
-            params = (Seed,)
+            params = (Seed,OnlyCreateSchedule)
 
             Jobs.append(PP_Server.submit(cmd,params))#partial(SaveGuard,cmd),params))
 
@@ -1026,6 +1029,7 @@ if __name__=="__main__":
         
         Results = []
         for i,job in enumerate(Jobs):
+            Seed = Seeds[i]
             print "Waiting for PP_Job #"+str(i+1)+": Seed="+str(Seed)
             Result = job()
             Results.append(Result)
