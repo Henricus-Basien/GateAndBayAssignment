@@ -927,11 +927,73 @@ def SolveGateAndBayAssignmentProblem(Seed=None,OnlyCreateSchedule=False):
 
     GABA_Solver = GateAndBayAssignmentSolver(airport,AutoRun = not OnlyCreateSchedule)
 
+#----------------------------------------
+# SaveGuard
+#----------------------------------------
+
+def SaveGuard(func,*args,**kwargs):
+    try:
+        func(*args,**kwargs)
+    except:
+        import traceback
+        print traceback.format_exc()
+
+def SaveSolver(*args,**kwargs):
+    from GateAndBayAssignment import SolveGateAndBayAssignmentProblem,SaveGuard
+    
+    SaveGuard(SolveGateAndBayAssignmentProblem,*args,**kwargs)
+
 if __name__=="__main__":
 
-    if 1:
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Manual Mode
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    if 0:#1:
         Seed = None # np.random.random()
         SolveGateAndBayAssignmentProblem(Seed)
-    else:
-        for Seed in range(50):
+
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Batch Scheduler
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    
+    elif 0: #1:
+        for Seed in range(10):
             SolveGateAndBayAssignmentProblem(Seed,OnlyCreateSchedule=True)
+
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # MultiProcessed Solver
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    
+    else:
+        import pp,multiprocessing
+        from functools import partial
+        nCPU = int(multiprocessing.cpu_count()/2-1)
+        PP_Server = pp.Server(nCPU,restart=True)
+
+        print "Started PP Server with '"+str(nCPU)+"' CPUs"
+
+        Seeds = range(nCPU)
+
+        #----------------------------------------
+        # Create Jobs
+        #----------------------------------------
+        
+        Jobs = []
+        for i in range(len(Seeds)):
+            Seed = Seeds[i]
+            print "Creating new PP_Job #"+str(i+1)+": Seed="+str(Seed)
+            cmd    = SaveSolver #SolveGateAndBayAssignmentProblem
+            params = (Seed,)
+
+            Jobs.append(PP_Server.submit(cmd,params))#partial(SaveGuard,cmd),params))
+
+        #----------------------------------------
+        # Run Jobs
+        #----------------------------------------
+        
+        Results = []
+        for i,job in enumerate(Jobs):
+            print "Waiting for PP_Job #"+str(i+1)+": Seed="+str(Seed)
+            Result = job()
+            Results.append(Result)
