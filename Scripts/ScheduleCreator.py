@@ -63,8 +63,9 @@ class ScheduleCreator(object):
         if not os.path.exists(self.ScheduleFolder): os.makedirs(self.ScheduleFolder)
 
         if self.MaxNrAircraft is None:
-            AverageStayTime = 3.0#2.5 # [h]
-            self.MaxNrAircraft = int((self.Airport.GetOperationalTime()/3600.)*self.MaxNrOverlappingAircraft/float(AverageStayTime)/2)*self.MaxNrDays
+            AverageStayTime = 2.75#3.5#3.0#2.5 # [h]
+            TimeFactor = AverageStayTime * 2
+            self.MaxNrAircraft = int((self.Airport.GetOperationalTime()/3600.)*self.MaxNrOverlappingAircraft/float(TimeFactor))*self.MaxNrDays
 
         if AutoRun:
             self.Run()
@@ -106,7 +107,9 @@ class ScheduleCreator(object):
             # AircraftType
             #----------------------------------------
             
-            AircraftType = np.random.choice(airline.AircraftTypes)
+            AircraftType = None
+            while AircraftType is None or AircraftType.Type not in self.Airport.CompatibleAircraftTypes:
+                AircraftType = np.random.choice(airline.AircraftTypes)
             ID = i+1
 
             ID = airline.Name+str(ID)
@@ -178,7 +181,13 @@ class ScheduleCreator(object):
             if np.random.uniform()<=0.125: 
 
                 BayFeasible = False
+                NrTries = 0
                 while not BayFeasible:
+                    NrTries+=1
+                    if NrTries>self.Airport.NrBays*2:
+                        print "ERROR: Unable to select feasible Prefered Bay for AircraftType: "+AircraftType.Type
+                        break
+
                     BayPreference = np.random.choice([g for g in self.Airport.Gates if not g.Virtual]).Name
                     if BayPreference in self.Airport.Gates_dict.keys():
                         GatePreference = BayPreference
@@ -192,6 +201,9 @@ class ScheduleCreator(object):
                         # print "Infeasible Type-Bay Combination found!"
                         BayPreference  = None
                         GatePreference = None
+
+                if not BayFeasible:
+                    continue
 
             #----------------------------------------
             # Create Aircraft

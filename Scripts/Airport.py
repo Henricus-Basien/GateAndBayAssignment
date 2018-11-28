@@ -55,6 +55,8 @@ class Airport(object):
         if AddVirtualElements:
             self.CreateVirtualElements()
         self.SetupLayoutDicts()
+        self.CountAirportElements()
+        self.GetCompatibleAircraftTypes()
 
         #--- TravelDistances ---
         self.TravelDistances_Gates = TravelDistances_Gates
@@ -64,6 +66,39 @@ class Airport(object):
         if not hasattr(self,"Airlines") or Airlines is not None: self.Airlines = Airlines
         if self.Airlines is None:
             self.Airlines = AllAirlines
+
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Count Elements
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    
+    def CountAirportElements(self):
+        #--- Terminals ---
+        self.NrTerminals_Total   = len(self.Terminals)
+        self.NrTerminals         = len([t for t in self.Terminals if not t.Virtual])
+        self.NrTerminals_Virtual = len([t for t in self.Terminals if     t.Virtual])
+        #--- Gates ---
+        self.NrGates_Total       = len(self.Gates)
+        self.NrGates             = len([g for g in self.Gates if not g.Virtual])
+        self.NrGates_Virtual     = len([g for g in self.Gates if     g.Virtual])
+        #--- Bays ---
+        self.NrBays_Total   = len(self.Bays)
+        self.NrBays         = len([b for b in self.Bays if not b.Virtual])
+        self.NrBays_Virtual = len([b for b in self.Bays if     b.Virtual])
+
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Compatibility
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    
+    def GetCompatibleAircraftTypes(self):
+
+        self.CompatibleAircraftTypes = []
+
+        for bay in self.Bays:
+            if bay.CompatibleAircraftTypes is not None:
+                self.CompatibleAircraftTypes+=bay.CompatibleAircraftTypes
+
+        # Remove Duplicates
+        self.CompatibleAircraftTypes = list(OrderedDict.fromkeys(self.CompatibleAircraftTypes))
 
     #================================================================================
     # Evaluation
@@ -217,12 +252,16 @@ class Airport(object):
         InfoText+=" "*3+"T_Open:  "+str(self.T_Open.time()) +"\n"
         InfoText+=" "*3+"T_Close: "+str(self.T_Close.time())+"\n"
 
-        InfoText+=" "*3+"Terminals: ("+str(len(self.Terminals))+") "+str(self.Terminals)+"\n"
-        InfoText+=" "*3+"Gates:     ("+str(len(self.Gates    ))+") "+str(self.Gates    )+"\n"
-        InfoText+=" "*3+"Bays:      ("+str(len(self.Bays     ))+") "+str(self.Bays     )+"\n"
+        InfoText+=" "*3+"Terminals: ("+str(self.NrTerminals)+"|"+str(self.NrTerminals_Virtual)+") "+str(self.Terminals)+"\n"
+        InfoText+=" "*3+"Gates:     ("+str(self.NrGates    )+"|"+str(self.NrGates_Virtual    )+") "+str(self.Gates    )+"\n"
+        InfoText+=" "*3+"Bays:      ("+str(self.NrBays     )+"|"+str(self.NrBays_Virtual     )+") "+str(self.Bays     )+"\n"
+
+        InfoText+=" "*3+"CompatibleAircraftTypes: "+str(self.CompatibleAircraftTypes)
+
         if ShowTravelDistances:
             InfoText+=" "*3+"TravelDistances_Gates:  "+str(self.TravelDistances_Gates) +"\n"
             InfoText+=" "*3+"TravelDistances_Bays:   "+str(self.TravelDistances_Bays ) +"\n"
+
         return InfoText 
 
     def __repr__(self):

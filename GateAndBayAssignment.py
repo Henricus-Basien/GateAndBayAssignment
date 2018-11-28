@@ -106,7 +106,7 @@ class GateAndBayAssignmentSolver(object):
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         if self.Schedule is None:
-            MaxNrAircraft  = len(self.Airport.Bays)
+            MaxNrAircraft  = self.Airport.NrBays
             self.Scheduler = ScheduleCreator(self.Airport,MaxNrOverlappingAircraft=MaxNrAircraft,ScheduleFolder="Schedules",AutoRun=False)
             self.Scheduler.Run(Visualize=True)
             self.Schedule  = self.Scheduler.Schedule
@@ -806,11 +806,9 @@ class GateAndBayAssignmentSolver(object):
             ws.cell(row=i+2, column=10).value  = aircraft.GatePreference
             ws.cell(row=i+2, column=11).value  = aircraft.GateAssigned == aircraft.GatePreference
 
-
         title = self.FormatTitle("Schedule.xlsx")
         wb.save(os.path.join(self.ScheduleFolder,title))
         print ">"+" "+"Exported '"+title+"'"
-
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Plot Result
