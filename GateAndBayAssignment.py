@@ -636,7 +636,7 @@ class GateAndBayAssignmentSolver(object):
     # Run 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    def RunLP(self,time_limit = 1*3600):
+    def RunLP(self,time_limit = 8*3600): #1*3600):
 
         t0 = getTime()
 
@@ -666,12 +666,13 @@ class GateAndBayAssignmentSolver(object):
             # Read
             #----------------------------------------
             
-            def Print(text):
-                print text
-            
-            with open(os.path.join(self.LP_Path,filename),"r") as tmp_output: 
-                lines = tmp_output.read().splitlines()
-                [Print(line.decode('ascii')) for line in lines]
+            if 0:
+                def Print(text):
+                    print text
+                
+                with open(os.path.join(self.LP_Path,filename),"r") as tmp_output: 
+                    lines = tmp_output.read().splitlines()
+                    [Print(line.decode('ascii')) for line in lines]
                 
 
         dt = getTime()-t0

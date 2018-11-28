@@ -118,7 +118,7 @@ class ScheduleCreator(object):
             # Airline
             #----------------------------------------
 
-            if self.Airport.LocalAirline is None or float(i)/self.MaxNrAircraft>0.35:
+            if self.Airport.LocalAirline is None or float(i)/self.MaxNrAircraft>0.3:
                 airline = np.random.choice(self.Airport.Airlines)
             else:
                 airline = copy(self.Airport.LocalAirline)

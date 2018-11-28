@@ -192,7 +192,7 @@ class Airport(object):
     # Virtual Elements
     #================================================================================
     
-    def CreateVirtualElements(self,per=0.25):
+    def CreateVirtualElements(self,per=0.2):
 
         self.VirtualColor = [0.35]*3
         
