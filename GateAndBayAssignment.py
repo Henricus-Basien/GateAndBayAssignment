@@ -973,7 +973,7 @@ if __name__=="__main__":
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     
     elif RunMode.lower()=="batchscheduler": #1:
-        for Seed in range(10):
+        for Seed in range(100):
             SolveGateAndBayAssignmentProblem(Seed,OnlyCreateSchedule=True)
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
