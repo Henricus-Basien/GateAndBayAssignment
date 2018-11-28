@@ -927,13 +927,29 @@ def SolveGateAndBayAssignmentProblem(Seed=None,OnlyCreateSchedule=False):
 
     GABA_Solver = GateAndBayAssignmentSolver(airport,AutoRun = not OnlyCreateSchedule)
 
+#----------------------------------------
+# SaveGuard
+#----------------------------------------
+
+def SaveGuard(func,*args,**kwargs):
+    try:
+        func(*args,**kwargs)
+    except:
+        import traceback
+        print traceback.format_exc()
+
+def SaveSolver(*args,**kwargs):
+    from GateAndBayAssignment import SolveGateAndBayAssignmentProblem,SaveGuard
+    
+    SaveGuard(SolveGateAndBayAssignmentProblem,*args,**kwargs)
+
 if __name__=="__main__":
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Manual Mode
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    if 1:
+    if 0:#1:
         Seed = None # np.random.random()
         SolveGateAndBayAssignmentProblem(Seed)
 
@@ -958,22 +974,6 @@ if __name__=="__main__":
         print "Started PP Server with '"+str(nCPU)+"' CPUs"
 
         Seeds = range(nCPU)
-
-        #----------------------------------------
-        # SaveGuard
-        #----------------------------------------
-
-        def SaveGuard(func,*args,**kwargs):
-            try:
-                func(*args,**kwargs)
-            except:
-                import traceback
-                print traceback.format_exc()
-
-        def SaveSolver(*args,**kwargs):
-            from GateAndBayAssignment import SolveGateAndBayAssignmentProblem,SaveGuard
-            
-            SaveGuard(SolveGateAndBayAssignmentProblem,*args,**kwargs)
 
         #----------------------------------------
         # Create Jobs
