@@ -44,7 +44,8 @@ from collections import OrderedDict
 # from copy import copy
 
 #--- (Date-)Time ---
-from time import time as getTime
+from time import time  as getTime
+from time import sleep as wait
 from datetime import datetime
 Now = datetime.now
 
@@ -126,9 +127,11 @@ class GateAndBayAssignmentSolver(object):
     # Run Assignment
     #================================================================================
     
-    def RunAll(self):
+    def RunAll(self,Show=False):
 
         t0 = getTime()
+
+        plt.close('all')
 
         self.Run(Mode="Bay")  # ; self.BayAssignment  = copy(self.SlotAssignment)
         self.SetupGatePreferences()
@@ -141,7 +144,7 @@ class GateAndBayAssignmentSolver(object):
         print ">"*3+" "+"Complete Gate&Bay-Assignment Problem solved @"+str(Now())+"\t in "+str(round(dt/60.,1))+" min"
         print "*"*100
 
-        plt.show()
+        if Show: plt.show()
 
     def Run(self,Mode,PrintProblem=False):
 
@@ -806,7 +809,7 @@ class GateAndBayAssignmentSolver(object):
         # Write Data
         #----------------------------------------
 
-        for i in range(self.MaxNrAircraft):
+        for i in range(len(self.Schedule)):
             aircraft = self.Schedule[i]
             #--- Info ---
             ws.cell(row=i+2, column=1 ).value = aircraft.ID
@@ -823,7 +826,7 @@ class GateAndBayAssignmentSolver(object):
             ws.cell(row=i+2, column=11).value  = aircraft.GateAssigned == aircraft.GatePreference
 
         title = self.FormatTitle("Schedule.xlsx")
-        wb.save(os.path.join(self.ScheduleFolder,title))
+        wb.save(os.path.join(self.Scheduler.ScheduleFolder,title))
         print ">"+" "+"Exported '"+title+"'"
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -832,8 +835,8 @@ class GateAndBayAssignmentSolver(object):
     
     def PlotResult(self,fontsize=4,Show=False):
 
-        if Show:
-            plt.close('all')
+        # if Show:
+        #     plt.close('all')
 
         fig,ax=plt.subplots(figsize=(16,9),dpi=120)
 
@@ -1037,18 +1040,29 @@ if __name__=="__main__":
             cmd    = SaveSolver #SolveGateAndBayAssignmentProblem
             params = (Seed,OnlyCreateSchedule)
 
-            Jobs.append(PP_Server.submit(cmd,params))#partial(SaveGuard,cmd),params))
+            job = PP_Server.submit(cmd,params)
+            Jobs.append(job)#partial(SaveGuard,cmd),params))
+            job.DONE = False
 
         #----------------------------------------
         # Run Jobs
         #----------------------------------------
         
+        print ">"*3+" Running "+str(len(Seeds))+" Jobs..."
         Results = []
-        for i,job in enumerate(Jobs):
-            Seed = Seeds[i]
-            print "Waiting for PP_Job #"+str(i+1)+": Seed="+str(Seed)
-            Result = job()
-            Results.append(Result)
+        if 0:#1:
+            for i,job in enumerate(Jobs):
+                Seed = Seeds[i]
+                print "Waiting for PP_Job #"+str(i+1)+": Seed="+str(Seed)
+                Result = job()
+                Results.append(Result)
+        while len(Jobs)!=len(Results):
+            for i,job in enumerate([j for j in Jobs if (j.finished and not j.DONE)]):
+                print "PP_Job #"+str(i+1)+" - Finished! : Seed="+str(Seed)
+                Result = job()
+                Results.append(Result)
+                job.DONE = True
+            wait(1.0)
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Unknown
