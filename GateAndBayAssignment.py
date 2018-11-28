@@ -1059,6 +1059,7 @@ if __name__=="__main__":
                 Results.append(Result)
         while len(Jobs)!=len(Results):
             for i,job in enumerate([j for j in Jobs if (j.finished and not j.DONE)]):
+                Seed = Seeds[i]
                 print "PP_Job #"+str(i+1)+" - Finished! : Seed="+str(Seed)
                 Result = job()
                 Results.append(Result)
