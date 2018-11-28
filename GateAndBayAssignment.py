@@ -947,6 +947,8 @@ def SaveSolver(*args,**kwargs):
 
 if __name__=="__main__":
 
+    print "GateAndBayAssignmentSolver Started on: "+str(Now())
+
     PossibleModes = ["Manual","BatchScheduler","MultiSolver"]
     RunMode = raw_input("Please select GateAndBayAssignmentSolver Mode "+str(PossibleModes)+": ")
     RunMode = RunMode.strip()
