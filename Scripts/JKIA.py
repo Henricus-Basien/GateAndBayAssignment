@@ -40,7 +40,7 @@ class JKIA(Airport):
     def __init__(self):
 
         T_Open  = "06:00"
-        T_Close = "12:00"# "23:59"#"12:00"#"18:00"#"23:59"#"18:00"#"12:00"#"23:59"
+        T_Close = "23:59"#"12:00"# "23:59"#"12:00"#"18:00"#"23:59"#"18:00"#"12:00"#"23:59"
 
         TravelDistances_Bays  = self.ReadTravelDistancesMatrix(JoinPath("Inputs","JKIA-TravelDistances_Bays.xlsx"))
         TravelDistances_Gates = self.ReadTravelDistancesMatrix(JoinPath("Inputs","JKIA-TravelDistances_Bays.xlsx")) # ToDo Needs to be fixed!
