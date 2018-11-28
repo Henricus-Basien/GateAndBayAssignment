@@ -334,7 +334,7 @@ class ScheduleCreator(object):
         plt.tight_layout()
         title = self.FormatTitle("Schedule")
         plt.savefig(os.path.join(self.ScheduleFolder,title))
-        print "Saved Figure '"+title+"'"
+        print "> Saved Figure '"+title+"'"
         if Show: plt.show(title)
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -395,7 +395,7 @@ class ScheduleCreator(object):
         plt.tight_layout()
         title = self.FormatTitle("Aircraft on Ground")
         plt.savefig(os.path.join(self.ScheduleFolder,title))
-        print "Saved Figure '"+title+"'"
+        print "> Saved Figure '"+title+"'"
         if Show: plt.show(title)
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -436,7 +436,7 @@ class ScheduleCreator(object):
         plt.tight_layout()
         title = self.FormatTitle("Aircraft GroundTime")
         plt.savefig(os.path.join(self.ScheduleFolder,title))
-        print "Saved Figure '"+title+"'"
+        print "> Saved Figure '"+title+"'"
         if Show: plt.show(title)
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -477,7 +477,7 @@ class ScheduleCreator(object):
         plt.tight_layout()
         title = self.FormatTitle("Aircraft NrPassengers")
         plt.savefig(os.path.join(self.ScheduleFolder,title))
-        print "Saved Figure '"+title+"'"
+        print "> Saved Figure '"+title+"'"
         if Show: plt.show(title)
 
 
@@ -522,7 +522,7 @@ class ScheduleCreator(object):
         plt.tight_layout()
         title = self.FormatTitle("Aircraft Types")
         plt.savefig(os.path.join(self.ScheduleFolder,title))
-        print "Saved Figure '"+title+"'"
+        print "> Saved Figure '"+title+"'"
         if Show: plt.show(title)
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

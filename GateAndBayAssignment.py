@@ -35,18 +35,37 @@ sys.path.insert(0,os.path.join(RootPath,"Scripts"))
 # External
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+#----------------------------------------
+# System
+#----------------------------------------
+
+#--- System ---
 from collections import OrderedDict
-from copy import copy
+# from copy import copy
 
-import pulp
-
-import openpyxl
-
+#--- (Date-)Time ---
+from time import time as getTime
 from datetime import datetime
 Now = datetime.now
-from time import time as getTime
+
+#--- Write TempFile ---
+from os import dup, dup2, close
+# import tempfile
+
+#----------------------------------------
+# Solver
+#----------------------------------------
+
+#--- Optimization ---
+import pulp
+
+#--- Mathematics ---
 import numpy as np
 
+#--- Excel Interface ---
+import openpyxl
+
+#--- Plotting ---
 import matplotlib.pyplot as plt
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -118,7 +137,7 @@ class GateAndBayAssignmentSolver(object):
 
         dt = getTime()-t0
         print "*"*100
-        print ">"*3+"Complete Gate&Bay-Assignment Problem solved @"+str(Now())+"\t in "+str(round(dt/60.,1))+" min"
+        print ">"*3+" "+"Complete Gate&Bay-Assignment Problem solved @"+str(Now())+"\t in "+str(round(dt/60.,1))+" min"
         print "*"*100
 
         plt.show()
@@ -175,6 +194,8 @@ class GateAndBayAssignmentSolver(object):
 
         t0 = getTime()
 
+        print "> Problem is being created..."
+
         LP = []
 
         if self.Mode=="Bay":
@@ -198,7 +219,8 @@ class GateAndBayAssignmentSolver(object):
         #..............................
         
         if not os.path.exists(self.LP_Path): os.makedirs(self.LP_Path)
-        self.LP_filepath = os.path.join(self.LP_Path,self.Airport.Name+" - "+self.Mode+"Assignment.PuLP")
+        filename = self.FormatTitle("LP.PuLP")
+        self.LP_filepath = os.path.join(self.LP_Path,filename)
         NrLines = 0
         with open(self.LP_filepath,"w") as LP_File:
             for line in LP:
@@ -208,7 +230,7 @@ class GateAndBayAssignmentSolver(object):
         print str(NrLines)+" Variables/ObjectiveFunctions/Constraints have been created!"
 
         dt = getTime()-t0
-        print ">"*3+"Problem created       @"+str(Now())+"\t in "+str(round(dt,2))+"s"
+        print ">"*3+" "+"Problem created       @"+str(Now())+"\t in "+str(round(dt,2))+"s"
 
     #----------------------------------------
     # Variables
@@ -551,7 +573,7 @@ class GateAndBayAssignmentSolver(object):
                 TotalNrVariables = len(self.Schedule)*len(self.Airport.Bays)
                 InFeasiblePer = len(BayCompatibilityConstraints)/float(TotalNrVariables)
                 #print BayCompatibilityConstraints
-                print ">"*3+str(len(BayCompatibilityConstraints))+"/"+str(TotalNrVariables)+" ("+str(round(InFeasiblePer*100,1))+r"%) InFeasibleVariables Found!"
+                print ">"*2+" "+str(len(BayCompatibilityConstraints))+"/"+str(TotalNrVariables)+" ("+str(round(InFeasiblePer*100,1))+r"%) InFeasibleVariables Found!"
 
         return BayCompatibilityConstraints
 
@@ -562,6 +584,8 @@ class GateAndBayAssignmentSolver(object):
     def ReconstructLP(self):
 
         t0 = getTime()
+
+        print "> Problem is being reconstructed..."
 
         # print "Init Problem"
         self.lp_problem = pulp.LpProblem(self.Mode+" Assignment Problem", pulp.LpMinimize)
@@ -590,20 +614,52 @@ class GateAndBayAssignmentSolver(object):
                 exec("self.lp_problem+="+line)
 
         dt = getTime()-t0
-        print ">"*3+"Problem reconstructed @"+str(Now())+"\t in "+str(round(dt,2))+"s"
+        print ">"*3+" "+"Problem reconstructed @"+str(Now())+"\t in "+str(round(dt,2))+"s"
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Run 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    def RunLP(self):
+    def RunLP(self,time_limit = 1*3600):
 
         t0 = getTime()
 
-        self.lp_problem.solve()
+        print "> Problem is being solved..."
+
+        solver = pulp.PULP_CBC_CMD(msg=True, maxSeconds=time_limit) # None
+
+        if 0: #1:
+            self.lp_problem.solve(solver=solver)
+        else:
+
+            #----------------------------------------
+            # Write/Solve
+            #----------------------------------------
+                
+            filename = self.FormatTitle("LP_Output.txt")
+            with open(os.path.join(self.LP_Path,filename),"w") as tmp_output: #tempfile.TemporaryFile() as tmp_output:
+                orig_std_out = dup(1)
+                dup2(tmp_output.fileno(), 1)
+                result = self.lp_problem.solve(solver=solver)
+                #print result
+                dup2(orig_std_out, 1)
+                close(orig_std_out)
+                tmp_output.seek(0)
+
+            #----------------------------------------
+            # Read
+            #----------------------------------------
+            
+            def Print(text):
+                print text
+            
+            with open(os.path.join(self.LP_Path,filename),"r") as tmp_output: 
+                lines = tmp_output.read().splitlines()
+                [Print(line.decode('ascii')) for line in lines]
+                
 
         dt = getTime()-t0
-        print ">"*3+"Problem solved        @"+str(Now())+"\t in "+str(round(dt,2))+"s"
+        print ">"*3+" "+"Problem solved        @"+str(Now())+"\t in "+str(round(dt,2))+"s"
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Print
@@ -700,7 +756,8 @@ class GateAndBayAssignmentSolver(object):
     
     def ExportResult(self):
 
-        with open(os.path.join(self.LP_Path,self.Mode+"Assignment"+" - "+"LP_result.txt"),"w") as ResultsFile:
+        filename = self.FormatTitle("LP_Result.txt")
+        with open(os.path.join(self.LP_Path,filename),"w") as ResultsFile:
             for variable in self.lp_problem.variables():
                 ResultsFile.write("{} = {}".format(variable.name, variable.varValue)+"\n")
 
@@ -815,10 +872,18 @@ class GateAndBayAssignmentSolver(object):
         
         plt.xlim(left=0)
         plt.tight_layout()
-        title=self.Airport.Name+" - "+self.Mode+" Assignment"
+        title=self.FormatTitle()
         plt.savefig(os.path.join(self.Scheduler.ScheduleFolder,title))
         if Show:
             plt.show(title)
+
+    #================================================================================
+    # Formatting
+    #================================================================================
+    
+    def FormatTitle(self,title=""):
+
+        return (self.Scheduler.FormatTitle(self.Mode+"Assignment"+" "+title)).strip()
 
 #****************************************************************************************************
 # Test Code
