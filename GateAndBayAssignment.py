@@ -868,5 +868,5 @@ if __name__=="__main__":
         Seed = None # np.random.random()
         SolveGateAndBayAssignmentProblem(Seed)
     else:
-        for Seed in range(10):
+        for Seed in range(50):
             SolveGateAndBayAssignmentProblem(Seed,OnlyCreateSchedule=True)
