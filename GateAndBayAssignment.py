@@ -947,12 +947,16 @@ if __name__=="__main__":
 
     PossibleModes = ["Manual","BatchScheduler","MultiSolver"]
     RunMode = raw_input("Please select GateAndBayAssignmentSolver Mode "+str(PossibleModes)+": ")
+    RunMode = RunMode.strip()
+
+    if RunMode=="":
+        RunMode = "Manual"
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Manual Mode
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    if RunMode=="Manual":#1:
+    if RunMode.lower()=="manual":#1:
         Seed = None # np.random.random()
         SolveGateAndBayAssignmentProblem(Seed)
 
@@ -960,7 +964,7 @@ if __name__=="__main__":
     # Batch Scheduler
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     
-    elif RunMode=="BatchScheduler": #1:
+    elif RunMode.lower()=="batchscheduler": #1:
         for Seed in range(10):
             SolveGateAndBayAssignmentProblem(Seed,OnlyCreateSchedule=True)
 
@@ -968,9 +972,9 @@ if __name__=="__main__":
     # MultiProcessed Solver
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     
-    elif RunMode=="MultiSolver":
+    elif RunMode.lower()=="multisolver":
         import pp,multiprocessing
-        from functools import partial
+        # from functools import partial
         nCPU = int(multiprocessing.cpu_count()/2-1)
         PP_Server = pp.Server(nCPU,restart=True)
 
@@ -979,7 +983,7 @@ if __name__=="__main__":
         if 0:
             Seeds = range(nCPU)
         else:
-            print "Please enter the Seed Value you'd like to run [ENTER to exit!]:"
+            print "Please enter the Seed Values you'd like to run [ENTER to exit]:"
             Seeds = []
             while True:
                 Seed = raw_input("SeedValue #"+str(len(Seeds)+1)+": ")
