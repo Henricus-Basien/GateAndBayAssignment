@@ -14,18 +14,32 @@ Email: Henricus@Basien.de
 # External
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+#----------------------------------------
+# System
+#----------------------------------------
+
+#--- System ---
 import os
 from copy import copy
-import openpyxl
+from collections import OrderedDict,Counter
+
+#--- (Date-)Time ---
+from time import time as getTime
 import datetime
 Now = datetime.datetime.now
-# from collections import OrderedDict
+
+#----------------------------------------
+# Project Specific
+#----------------------------------------
+
+#--- Mathematics ---
 import numpy as np
-from time import time as getTime
 
+#--- Excel Interface ---
+import openpyxl
+
+#--- Plotting ---
 import matplotlib.pyplot as plt
-
-from collections import Counter
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Internal
@@ -67,6 +81,8 @@ class ScheduleCreator(object):
             AverageStayTime = 2.75#3.5#3.0#2.5 # [h]
             TimeFactor = AverageStayTime * 2
             self.MaxNrAircraft = int((self.Airport.GetOperationalTime()/3600.)*self.MaxNrOverlappingAircraft/float(TimeFactor))*self.MaxNrDays
+
+        self.dpi = 300#120
 
         if AutoRun:
             self.Run()
@@ -168,6 +184,8 @@ class ScheduleCreator(object):
             
             #--- Nr Passengers ---
             NrPassenger_per = 1-np.random.beta(1,3)#(2,5)
+            if NrPassenger_per<0.15:
+                NrPassenger_per = 0.15
             NrPassengers = int(AircraftType.MaxNrPassengers*NrPassenger_per)
             # print "NrPassengers:",NrPassengers
 
@@ -318,7 +336,7 @@ class ScheduleCreator(object):
 
     def ShowGanttChart(self,Show=True):
 
-        fig,ax=plt.subplots(figsize=(16,9),dpi=120)
+        fig,ax=plt.subplots(figsize=(16,9),dpi=self.dpi)
 
         #----------------------------------------
         # Preprocess
@@ -370,9 +388,9 @@ class ScheduleCreator(object):
     # Aircraft on Ground
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     
-    def ShowAircraftOnGround(self,NrElements=int(24*(60/5.)),Show=True):
+    def ShowAircraftOnGround(self,NrElements=int(24*(60/5.)),AddAircraftTypes=True,Show=True):
 
-        fig,ax=plt.subplots(figsize=(16,9),dpi=120)
+        fig,ax=plt.subplots(figsize=(16,9),dpi=self.dpi)
 
         #----------------------------------------
         # Set Data
@@ -380,8 +398,10 @@ class ScheduleCreator(object):
         
         x = []
         y = []
+        if AddAircraftTypes: y_Type = OrderedDict()
 
-        for i in range(NrElements*2):
+        I = NrElements*2
+        for i in range(I):
             t = float(i)/NrElements * (3600*24)
 
             NrAircraft = 0
@@ -390,6 +410,12 @@ class ScheduleCreator(object):
                 t_d = aircraft.Departure_t
                 if t_a<=t and t<=t_d:
                     NrAircraft+=1
+                    #--- Track Types ---
+                    if AddAircraftTypes:
+                        if not aircraft.Type in y_Type.keys():
+                            # y_Type[aircraft.Type][i] = 0
+                            y_Type[aircraft.Type] = np.zeros(I)
+                        y_Type[aircraft.Type][i]+=1
                 # print t/3600,t_a/3600,t_d/3600
             # print "t: "+str(round(    t/3600.,2))+" h","NrAircraft",NrAircraft
             x.append(t)
@@ -401,7 +427,38 @@ class ScheduleCreator(object):
 
         color = [[float(na)/NrAircraft_Max,1-float(na)/NrAircraft_Max,0] for na in y]
 
-        plt.bar(x/3600.,y,width=24./NrElements,color=color)
+        x /= 3600.
+
+        plt.bar(x,y,width=24./NrElements,color=color)
+
+        #..............................
+        # Aircraft Types
+        #..............................
+        
+        if AddAircraftTypes:
+            axes2 = plt.twinx()
+            NrTypes = len(y_Type.keys())
+
+            #--- Plots ---
+            for i,Type in enumerate(y_Type):
+                color = [float(i)/(NrTypes-1)]*3
+                y_t = y_Type[Type]
+
+                axes2.plot(x,y_t,color=color)
+
+            #--- Annotate ---
+            for i,Type in enumerate(y_Type):
+                color = [float(i)/(NrTypes-1)]*3
+                y_t = y_Type[Type]
+
+                x_m = x[np.argmax(y_t)]
+                y_m = np.max(y_t)
+                axes2.annotate(Type, xy=(x_m,y_m), xytext=(x_m+1, y_m+1),
+                arrowprops=dict(arrowstyle="simple",facecolor='black',color=color),#, shrink=0.05
+                color=color,
+                size = 8,
+                zorder=100-NrTypes+i
+                )
 
         #----------------------------------------
         # Configure Plot
@@ -421,6 +478,9 @@ class ScheduleCreator(object):
         #..............................
         
         plt.xlim(left=0)
+        if 1:
+            plt.ylim(  0, np.max(y))
+            axes2.set_ylim(0, np.max(y))
         plt.tight_layout()
         title = self.FormatTitle("Aircraft on Ground")
         plt.savefig(os.path.join(self.ScheduleFolder,title))
@@ -433,7 +493,7 @@ class ScheduleCreator(object):
     
     def ShowAircraftGroundTime(self,Show=True):
 
-        fig,ax=plt.subplots(figsize=(16,9),dpi=120)
+        fig,ax=plt.subplots(figsize=(16,9),dpi=self.dpi)
 
         #----------------------------------------
         # Set Data
@@ -474,7 +534,7 @@ class ScheduleCreator(object):
     
     def ShowAircraftNrPassengers(self,Show=True):
 
-        fig,ax=plt.subplots(figsize=(16,9),dpi=120)
+        fig,ax=plt.subplots(figsize=(16,9),dpi=self.dpi)
 
         #----------------------------------------
         # Set Data
@@ -512,7 +572,7 @@ class ScheduleCreator(object):
 
     def ShowAircraftTypes(self,Show=True):
 
-        fig,ax=plt.subplots(figsize=(16,9),dpi=120)
+        fig,ax=plt.subplots(figsize=(16,9),dpi=self.dpi)
 
         #----------------------------------------
         # Set Data

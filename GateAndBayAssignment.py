@@ -53,7 +53,7 @@ from os import dup, dup2, close
 # import tempfile
 
 #----------------------------------------
-# Solver
+# Project Specific
 #----------------------------------------
 
 #--- Optimization ---
@@ -100,6 +100,7 @@ class GateAndBayAssignmentSolver(object):
         self.LP_Path = os.path.realpath(LP_Path)
 
         self.RemoveInfeasibleVariables = True
+        self.AddAdjacencyConstraints   = False # ToDo: Fix this, because it makes the Gate Assignment impossibly slow!!!
 
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         # Schedule
@@ -254,6 +255,9 @@ class GateAndBayAssignmentSolver(object):
 
     def GetLP_AdjacencyVariables(self):
 
+        if not self.AddAdjacencyConstraints:
+            return []
+
         self.AdjacencyVariables = self.AdjacencyConstraints.values()
 
         Variables = ["Var: "+v for v in self.AdjacencyVariables]
@@ -298,6 +302,12 @@ class GateAndBayAssignmentSolver(object):
                 #--- Objective ---
                 if b.Virtual:
                     TravelDistance = 10**6
+                    #.. Try to stack virtual elements ..
+                    elements = b.Name.split("_")
+                    try:
+                        index = int(elements[-1])
+                        TravelDistance*=(index+1)
+                    except: pass
                 else:
                     Terminal = a.Airline.Terminal
                     BayName = b.Name
@@ -518,6 +528,9 @@ class GateAndBayAssignmentSolver(object):
     def SetAdjacencyConstraints(self):
 
         self.AdjacencyConstraints = OrderedDict()
+
+        if not self.AddAdjacencyConstraints:
+            return
 
         for i in range(len(self.Schedule)):
             a1 = self.Schedule[i]
