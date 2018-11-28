@@ -726,6 +726,9 @@ class GateAndBayAssignmentSolver(object):
                 print "WARNING: Unable to parse Variable '"+variable.name+"'"
                 continue
 
+            if X!="X":
+                continue
+
             i = int(i);k = int(k)
 
             K = str(k)
