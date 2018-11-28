@@ -176,9 +176,22 @@ class ScheduleCreator(object):
             BayPreference  = None
             GatePreference = None
             if np.random.uniform()<=0.125: 
-                BayPreference = np.random.choice(self.Airport.Gates).Name
-                if BayPreference in self.Airport.Gates_dict.keys():
-                    GatePreference = BayPreference
+
+                BayFeasible = False
+                while not BayFeasible:
+                    BayPreference = np.random.choice([g for g in self.Airport.Gates if not g.Virtual]).Name
+                    if BayPreference in self.Airport.Gates_dict.keys():
+                        GatePreference = BayPreference
+
+                    #--- Check Feasibility ---
+                    bay = self.Airport.Bays_dict[BayPreference]
+                    # print bay
+                    if AircraftType.Type in bay.CompatibleAircraftTypes:
+                        BayFeasible = True
+                    else:
+                        # print "Infeasible Type-Bay Combination found!"
+                        BayPreference  = None
+                        GatePreference = None
 
             #----------------------------------------
             # Create Aircraft

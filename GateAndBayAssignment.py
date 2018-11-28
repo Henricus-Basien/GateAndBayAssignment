@@ -746,9 +746,11 @@ class GateAndBayAssignmentSolver(object):
 
         for FlightID in self.SlotAssignment:
             aircraft = self.Schedule_dict[FlightID]
-            Bay = self.SlotAssignment[FlightID]
-            if aircraft.GatePreference is None and Bay in self.Airport.Gates_dict.keys():
-                aircraft.GatePreference = Bay
+            bayName  = self.SlotAssignment[FlightID]
+            if aircraft.GatePreference is None and bayName in self.Airport.Gates_dict.keys():
+                gate = self.Airport.Gates_dict[bayName]
+                if not gate.Virtual:
+                    aircraft.GatePreference = bayName
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Export
@@ -945,11 +947,24 @@ def SaveSolver(*args,**kwargs):
 
 if __name__=="__main__":
 
+    PossibleModes = ["Manual","BatchScheduler","MultiSolver"]
+    RunMode = raw_input("Please select GateAndBayAssignmentSolver Mode "+str(PossibleModes)+": ")
+    RunMode = RunMode.strip()
+
+    try:
+        RunMode = int(RunMode)
+        RunMode = PossibleModes[RunMode-1]
+    except:
+        pass
+
+    if RunMode=="":
+        RunMode = "Manual"
+
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Manual Mode
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    if 0:#1:
+    if RunMode.lower()=="manual":#1:
         Seed = None # np.random.random()
         SolveGateAndBayAssignmentProblem(Seed)
 
@@ -957,7 +972,7 @@ if __name__=="__main__":
     # Batch Scheduler
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     
-    elif 0: #1:
+    elif RunMode.lower()=="batchscheduler": #1:
         for Seed in range(10):
             SolveGateAndBayAssignmentProblem(Seed,OnlyCreateSchedule=True)
 
@@ -965,15 +980,32 @@ if __name__=="__main__":
     # MultiProcessed Solver
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     
-    else:
+    elif RunMode.lower()=="multisolver":
         import pp,multiprocessing
-        from functools import partial
+        # from functools import partial
         nCPU = int(multiprocessing.cpu_count()/2-1)
         PP_Server = pp.Server(nCPU,restart=True)
 
         print "Started PP Server with '"+str(nCPU)+"' CPUs"
 
-        Seeds = range(nCPU)
+        if 0:
+            Seeds = range(nCPU)
+        else:
+            print "Please enter the Seed Values you'd like to run [ENTER to exit | 'r' for random]:"
+            Seeds = []
+            while True:
+                Seed = raw_input("SeedValue #"+str(len(Seeds)+1)+": ")
+                Seed = Seed.strip()
+                if Seed=="":
+                    break
+                elif Seed=="r":
+                    Seed = np.random.randint(10**9)
+                try:
+                    Seed = int(Seed)
+                except:
+                    print "WARNING: Seed '"+str(Seed)+"' is not valid; only use numerical values!"
+                    continue
+                Seeds.append(Seed)
 
         #----------------------------------------
         # Create Jobs
@@ -997,3 +1029,10 @@ if __name__=="__main__":
             print "Waiting for PP_Job #"+str(i+1)+": Seed="+str(Seed)
             Result = job()
             Results.append(Result)
+
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Unknown
+    #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    
+    else:
+        print "ERROR: Mode '"+str(RunMode)+"' is unknown! Please select one of the PossibleModes: "+str(PossibleModes)
