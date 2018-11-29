@@ -175,9 +175,9 @@ class GateAndBayAssignmentSolver(object):
         self.ReconstructLP()
         if PrintProblem: print self.lp_problem
         self.RunLP()
-        self.PrintResult()
         self.ExportResult()
         self.ConvertResult()
+        self.PrintResult()
 
         #----------------------------------------
         # Addendum
@@ -843,7 +843,7 @@ class GateAndBayAssignmentSolver(object):
         # if Show:
         #     plt.close('all')
 
-        fig,ax=plt.subplots(figsize=(16,9),dpi=120)
+        fig,ax=plt.subplots(figsize=(16,9),dpi=self.Scheduler.dpi)
 
         #----------------------------------------
         # Preprocess

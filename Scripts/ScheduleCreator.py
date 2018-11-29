@@ -79,7 +79,7 @@ class ScheduleCreator(object):
 
         if self.MaxNrAircraft is None:
             AverageStayTime = 2.75#3.5#3.0#2.5 # [h]
-            TimeFactor = AverageStayTime * 2
+            TimeFactor = AverageStayTime * 2 * 1.225 #1.15 #1.25#1.5
             self.MaxNrAircraft = int((self.Airport.GetOperationalTime()/3600.)*self.MaxNrOverlappingAircraft/float(TimeFactor))*self.MaxNrDays
 
         self.dpi = 300#120

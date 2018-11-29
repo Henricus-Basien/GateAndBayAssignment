@@ -37,7 +37,7 @@ class Airport(object):
     # Initialization
     #================================================================================
     
-    def __init__(self,Name="TestAirport",T_Open="08:00",T_Close="22:00",Terminals=None, Gates=None,Bays=None,TravelDistances_Gates={},TravelDistances_Bays={},Airlines=None,LocalAirline=None,AddVirtualElements=True):
+    def __init__(self,Name="TestAirport",T_Open="08:00",T_Close="22:00",Terminals=None, Gates=None,Bays=None,TravelDistances_Gates={},TravelDistances_Bays={},Airlines=None,LocalAirline=None,AddVirtualElements=True):#False):#True):
         super(Airport, self).__init__()
 
         self.Name = Name
