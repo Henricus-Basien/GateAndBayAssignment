@@ -1062,9 +1062,10 @@ if __name__=="__main__":
                 Result = job()
                 Results.append(Result)
         while len(Jobs)!=len(Results):
-            for i,job in enumerate([j for j in Jobs if (j.finished and not j.DONE)]):
+            for i,job in enumerate(Jobs):#([j for j in Jobs if (j.finished and not j.DONE)]):
+                if not (job.finished and not job.DONE): continue
                 Seed = Seeds[i]
-                print "PP_Job #"+str(i+1)+" - Finished! : Seed="+str(Seed)
+                print ">"*50+"PP_Job #"+str(i+1)+" - Finished! : Seed="+str(Seed)
                 Result = job()
                 Results.append(Result)
                 job.DONE = True
