@@ -625,7 +625,7 @@ class ScheduleCreator(object):
 
     def ShowAirlines(self,Show=True):
 
-        fig,ax=plt.subplots(figsize=(16,9),dpi=120)
+        fig,ax=plt.subplots(figsize=(16,9),dpi=self.dpi)
 
         #----------------------------------------
         # Set Data
@@ -666,9 +666,6 @@ class ScheduleCreator(object):
         plt.savefig(os.path.join(self.ScheduleFolder,title))
         print "> Saved Figure '"+title+"'"
         if Show: plt.show(title)
-
-
-
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Aircraft GroundTime
