@@ -272,13 +272,14 @@ class Airport(object):
         InfoText+=" "*3+"Gates:     ("+str(self.NrGates    )+"|"+str(self.NrGates_Virtual    )+") "+str(self.Gates    )+"\n"
         InfoText+=" "*3+"Bays:      ("+str(self.NrBays     )+"|"+str(self.NrBays_Virtual     )+") "+str(self.Bays     )+"\n"
 
-        InfoText+=" "*3+"CompatibleAircraftTypes: "+str(self.CompatibleAircraftTypes)
+        InfoText+=" "*3+"Airlines:                "+str([a.Name for a in self.Airlines]) +"\n"
+        InfoText+=" "*3+"CompatibleAircraftTypes: "+str(self.CompatibleAircraftTypes)    +"\n"
 
         if ShowTravelDistances:
             InfoText+=" "*3+"TravelDistances_Gates:  "+str(self.TravelDistances_Gates) +"\n"
             InfoText+=" "*3+"TravelDistances_Bays:   "+str(self.TravelDistances_Bays ) +"\n"
 
-        return InfoText 
+        return InfoText.strip()
 
     def __repr__(self):
         return self.GetInfoText()

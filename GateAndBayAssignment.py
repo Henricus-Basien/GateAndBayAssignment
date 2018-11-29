@@ -306,11 +306,10 @@ class GateAndBayAssignmentSolver(object):
                 if b.Virtual:
                     TravelDistance = 10**6
                     #.. Try to stack virtual elements ..
-                    #elements = b.Name.split("_")
                     try:
-                        index = int(b.Name[1:])#int(elements[-1])
+                        index = int(b.Name[1:])
                         TravelDistance*=(index+1)
-                    except: pass
+                    except: print "WARNING: Unable to get Virtual Bay Index!"
                 else:
                     Terminal = a.Airline.Terminal
                     BayName = b.Name
@@ -405,6 +404,11 @@ class GateAndBayAssignmentSolver(object):
                 #--- Objective ---
                 if g.Virtual:
                     TravelDistance = 10**6
+                    #.. Try to stack virtual elements ..
+                    try:
+                        index = int(g.Name[1:])
+                        TravelDistance*=(index+1)
+                    except: print "WARNING: Unable to get Virtual Gate Index!"
                 else:
                     Terminal = a.Airline.Terminal
                     GateName = g.Name
