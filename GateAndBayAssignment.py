@@ -720,7 +720,7 @@ class GateAndBayAssignmentSolver(object):
     # Convert Result
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         
-    def ConvertResult(self,PrintResult=True):
+    def ConvertResult(self,PrintResult=False):#True):
 
         self.SlotAssignment      = OrderedDict()
         self.SlotAssignment_Dual = OrderedDict()
