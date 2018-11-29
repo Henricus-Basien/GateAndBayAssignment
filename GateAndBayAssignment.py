@@ -766,11 +766,11 @@ class GateAndBayAssignmentSolver(object):
 
         for FlightID in self.SlotAssignment:
             aircraft = self.Schedule_dict[FlightID]
-            bayName  = self.SlotAssignment[FlightID]
-            if aircraft.GatePreference is None and bayName in self.Airport.Gates_dict.keys():
-                gate = self.Airport.Gates_dict[bayName]
+            bay      = self.SlotAssignment[FlightID]
+            if (aircraft.GatePreference is None) and (bay.Name in list(self.Airport.Gates_dict.keys())):
+                gate = self.Airport.Gates_dict[bay.Name]
                 if not gate.Virtual:
-                    aircraft.GatePreference = bayName
+                    aircraft.GatePreference = bay.Name
 
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     # Export
@@ -826,7 +826,7 @@ class GateAndBayAssignmentSolver(object):
             ws.cell(row=i+2, column=10).value  = aircraft.GatePreference
             ws.cell(row=i+2, column=11).value  = aircraft.GateAssigned == aircraft.GatePreference
 
-        title = self.FormatTitle("Schedule.xlsx")
+        title = self.Scheduler.FormatTitle("Gate&BayAssignment Schedule.xlsx")
         wb.save(os.path.join(self.Scheduler.ScheduleFolder,title))
         print ">"+" "+"Exported '"+title+"'"
 

@@ -212,7 +212,7 @@ class ScheduleCreator(object):
 
                     BayPreference = np.random.choice([g for g in self.Airport.Gates if not g.Virtual]).Name
                     if BayPreference in self.Airport.Gates_dict.keys():
-                        GatePreference = BayPreference
+                        GatePreference = copy(BayPreference)
 
                     #--- Check Feasibility ---
                     bay = self.Airport.Bays_dict[BayPreference]
