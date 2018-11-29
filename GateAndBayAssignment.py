@@ -306,9 +306,9 @@ class GateAndBayAssignmentSolver(object):
                 if b.Virtual:
                     TravelDistance = 10**6
                     #.. Try to stack virtual elements ..
-                    elements = b.Name.split("_")
+                    #elements = b.Name.split("_")
                     try:
-                        index = int(elements[-1])
+                        index = int(b.Name[1:])#int(elements[-1])
                         TravelDistance*=(index+1)
                     except: pass
                 else:
