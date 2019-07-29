@@ -4,7 +4,7 @@
 *~
 ~*
 
-Temp/
+Temp*/
 
 ######################
 # Python Files (temp)#
@@ -40,6 +40,8 @@ Thumbs.db
 *.png
 *.xlsx
 !Inputs/*.xlsx
+
+Schedules*/
 
 ######################
 #     Pulp Files     #
